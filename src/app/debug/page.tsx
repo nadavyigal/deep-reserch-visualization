@@ -19,6 +19,27 @@ export default function DebugPage() {
         </Link>
         
         <Link 
+          href="/debug/health" 
+          className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+        >
+          <h2 className="text-xl font-semibold mb-2">Health Check</h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            View system health status, environment configuration, and API connectivity.
+          </p>
+        </Link>
+        
+        <Link 
+          href="/api/health" 
+          className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+          target="_blank"
+        >
+          <h2 className="text-xl font-semibold mb-2">Health API</h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Direct access to the health check API endpoint (raw JSON).
+          </p>
+        </Link>
+        
+        <Link 
           href="/" 
           className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
         >
