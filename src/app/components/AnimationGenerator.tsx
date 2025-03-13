@@ -1,87 +1,83 @@
-"use client"
-
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
 import EnhancedTextAnimation from './EnhancedTextAnimation';
+import { advancedTextAnimation } from './AnimationTemplates';
 
 interface AnimationGeneratorProps {
   text: string;
   section?: string;
+  className?: string;
 }
 
-const AnimationGenerator: React.FC<AnimationGeneratorProps> = ({ text, section }) => {
+const AnimationGenerator: React.FC<AnimationGeneratorProps> = ({ 
+  text, 
+  section,
+  className = ''
+}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState<boolean>(false);
-  const [key, setKey] = useState<number>(0); // Key to force re-render
+  const [key, setKey] = useState<number>(0);
+  const [animationText, setAnimationText] = useState<string>(text);
 
+  // Extract key concepts from text for animation
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    // Update animation text when text prop changes
+    setAnimationText(text);
+  }, [text]);
 
-  const handleRegenerateClick = () => {
-    // Force re-render of the animation by updating the key
+  // Function to regenerate animation
+  const regenerateAnimation = () => {
+    setLoading(true);
+    setError(null);
+    
+    // Force re-render of animation component by updating key
     setKey(prevKey => prevKey + 1);
+    
+    // Simulate API call with timeout
+    setTimeout(() => {
+      setLoading(false);
+    }, 800);
   };
 
-  if (!isClient) {
-    return (
-      <Card className="overflow-hidden border-0 shadow-sm bg-white dark:bg-gray-800">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium">Interactive Animation</CardTitle>
-          <CardDescription>
-            Loading animation...
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="animation-container h-[300px] w-full relative bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <p>Loading animation component...</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="overflow-hidden border-0 shadow-sm bg-white dark:bg-gray-800">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">Interactive Animation</CardTitle>
-        <CardDescription>
-          Visual representation of key concepts
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="p-0">
-        <div className="animation-container w-full relative">
-          {error ? (
-            <div className="p-4 text-red-500 h-[300px] flex items-center justify-center">
-              <div>
-                <p className="font-medium">Error</p>
-                <p>{error}</p>
-              </div>
-            </div>
-          ) : (
-            <EnhancedTextAnimation 
-              key={`animation-${key}`} 
-              text={text} 
-              section={section} 
-            />
-          )}
-        </div>
-      </CardContent>
-      
-      <CardFooter className="flex justify-between pt-2">
-        <button 
-          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md transition-colors"
-          onClick={handleRegenerateClick}
+    <div className={`animation-generator ${className}`}>
+      <div className="mb-4 flex justify-between items-center">
+        <h3 className="text-lg font-medium text-gray-800">
+          Visualization
+        </h3>
+        <button
+          onClick={regenerateAnimation}
           disabled={loading}
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         >
-          Regenerate Animation
+          {loading ? 'Regenerating...' : 'Regenerate Animation'}
         </button>
-      </CardFooter>
-    </Card>
+      </div>
+      
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+      
+      <div className="relative">
+        {loading && (
+          <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        )}
+        
+        <EnhancedTextAnimation 
+          key={`animation-${key}`}
+          text={animationText}
+          section={section}
+          className="border border-gray-200"
+        />
+      </div>
+      
+      <div className="mt-2 text-xs text-gray-500">
+        <p>Animation displays key concepts from your text. Click regenerate to create a new visualization.</p>
+      </div>
+    </div>
   );
 };
 
