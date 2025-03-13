@@ -1,7 +1,5 @@
-'use client'
-
-import React, { useEffect, useRef } from 'react';
-import anime from 'animejs/lib/anime.es.js';
+import React, { useEffect, useRef, useState } from 'react';
+import { advancedTextAnimation } from './AnimationTemplates';
 
 interface EnhancedTextAnimationProps {
   text: string;
@@ -11,272 +9,123 @@ interface EnhancedTextAnimationProps {
 
 const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({ 
   text, 
-  section,
-  className = ''
+  section, 
+  className = '' 
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<anime.AnimeInstance | null>(null);
-
-  // Extract key concepts from text
-  const extractKeywords = (inputText: string, maxWords = 6): string[] => {
-    if (!inputText) return [];
-    
-    // Remove common stop words
-    const stopWords = new Set([
-      'a', 'an', 'the', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 
-      'be', 'been', 'being', 'to', 'of', 'for', 'with', 'by', 'about', 
-      'against', 'between', 'into', 'through', 'during', 'before', 'after',
-      'above', 'below', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over',
-      'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when',
-      'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more',
-      'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own',
-      'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just', 'should',
-      'now', 'this', 'that', 'these', 'those'
-    ]);
-    
-    // Split text into words, filter out stop words and short words
-    const words = inputText
-      .replace(/[^\w\s]/g, '') // Remove punctuation
-      .split(/\s+/)
-      .filter(word => word.length > 3 && !stopWords.has(word.toLowerCase()))
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize first letter
-    
-    // Count word frequency
-    const wordCount = new Map<string, number>();
-    words.forEach(word => {
-      wordCount.set(word, (wordCount.get(word) || 0) + 1);
-    });
-    
-    // Sort by frequency and get top words
-    return Array.from(wordCount.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, maxWords)
-      .map(entry => entry[0]);
-  };
+  const [key, setKey] = useState<number>(0);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   useEffect(() => {
-    // Clean up previous animation
-    if (animationRef.current) {
-      animationRef.current.pause();
-    }
+    // Reset animation when text or section changes
+    setKey(prev => prev + 1);
+  }, [text, section]);
+
+  useEffect(() => {
+    let animationInstance: any = null;
+    let observer: IntersectionObserver | null = null;
     
-    if (containerRef.current) {
-      containerRef.current.innerHTML = '';
+    const runAnimation = async () => {
+      if (!containerRef.current) return;
       
-      const contentToUse = section && section !== 'Full Document' ? section : text;
-      const keywords = extractKeywords(contentToUse);
-      
-      // If no keywords found, use default words
-      const displayWords = keywords.length > 0 
-        ? keywords 
-        : ['Visualization', 'Animation', 'Interactive', 'Dynamic', 'Content'];
-      
-      // Create wrapper
-      const wrapper = document.createElement('div');
-      wrapper.style.position = 'relative';
-      wrapper.style.width = '100%';
-      wrapper.style.height = '100%';
-      wrapper.style.display = 'flex';
-      wrapper.style.flexDirection = 'column';
-      wrapper.style.alignItems = 'center';
-      wrapper.style.justifyContent = 'center';
-      wrapper.style.overflow = 'hidden';
-      wrapper.style.padding = '20px';
-      containerRef.current.appendChild(wrapper);
-      
-      // Create title
-      const title = document.createElement('h2');
-      title.textContent = 'Key Concepts';
-      title.style.fontSize = '24px';
-      title.style.fontWeight = 'bold';
-      title.style.color = '#3498db';
-      title.style.opacity = '0';
-      title.style.marginBottom = '30px';
-      title.style.textAlign = 'center';
-      wrapper.appendChild(title);
-      
-      // Create concept container
-      const conceptContainer = document.createElement('div');
-      conceptContainer.style.display = 'flex';
-      conceptContainer.style.flexWrap = 'wrap';
-      conceptContainer.style.justifyContent = 'center';
-      conceptContainer.style.alignItems = 'center';
-      conceptContainer.style.width = '100%';
-      conceptContainer.style.maxWidth = '600px';
-      wrapper.appendChild(conceptContainer);
-      
-      // Create concept elements
-      const conceptElements = [];
-      const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
-      
-      displayWords.forEach((word, i) => {
-        // Create concept card
-        const card = document.createElement('div');
-        card.style.backgroundColor = colors[i % colors.length];
-        card.style.color = '#fff';
-        card.style.padding = '12px 20px';
-        card.style.margin = '10px';
-        card.style.borderRadius = '8px';
-        card.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-        card.style.opacity = '0';
-        card.style.transform = 'scale(0.8)';
-        card.style.display = 'flex';
-        card.style.alignItems = 'center';
-        card.style.justifyContent = 'center';
-        card.style.minWidth = '120px';
-        card.style.textAlign = 'center';
+      try {
+        // Clean up any previous animation
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
+        }
         
-        // Create icon based on word index
-        const icon = document.createElement('div');
-        icon.style.marginRight = '10px';
-        icon.style.fontSize = '20px';
+        // Create a text container to hold the text for keyword extraction
+        const textContainer = document.createElement('div');
+        textContainer.style.position = 'absolute';
+        textContainer.style.visibility = 'hidden';
+        textContainer.textContent = text;
+        containerRef.current.appendChild(textContainer);
         
-        // Simple icon mapping
-        const icons = ['📊', '🔍', '📈', '🔄', '📱', '🌟'];
-        icon.textContent = icons[i % icons.length];
+        // Dynamically import anime.js
+        const animeModule = await import('animejs').catch(err => {
+          console.error('Failed to load anime.js:', err);
+          return { default: null };
+        });
         
-        card.appendChild(icon);
+        const anime = animeModule.default;
+        if (!anime || !containerRef.current) {
+          console.error('Animation library or container not available');
+          return;
+        }
         
-        // Create text element
-        const textEl = document.createElement('span');
-        textEl.textContent = word;
-        textEl.style.fontSize = '16px';
-        textEl.style.fontWeight = '500';
+        // Use the advanced text animation template
+        const animationCode = advancedTextAnimation;
         
-        card.appendChild(textEl);
-        conceptContainer.appendChild(card);
-        conceptElements.push(card);
-      });
-      
-      // Create visual elements
-      const visualContainer = document.createElement('div');
-      visualContainer.style.position = 'absolute';
-      visualContainer.style.top = '0';
-      visualContainer.style.left = '0';
-      visualContainer.style.width = '100%';
-      visualContainer.style.height = '100%';
-      visualContainer.style.pointerEvents = 'none';
-      visualContainer.style.zIndex = '-1';
-      wrapper.appendChild(visualContainer);
-      
-      // Create decorative elements
-      const decorElements = [];
-      for (let i = 0; i < 15; i++) {
-        const decor = document.createElement('div');
-        decor.style.position = 'absolute';
-        decor.style.borderRadius = '50%';
-        decor.style.opacity = '0';
+        // Extract the createAnimation function from the code
+        const createAnimationFn = new Function(
+          'return ' + animationCode.replace('function createAnimation', 'function')
+        )();
         
-        // Randomize size
-        const size = 5 + Math.random() * 15;
-        decor.style.width = `${size}px`;
-        decor.style.height = `${size}px`;
+        // Run the animation
+        animationInstance = createAnimationFn(anime, containerRef.current);
         
-        // Randomize position
-        decor.style.left = `${Math.random() * 100}%`;
-        decor.style.top = `${Math.random() * 100}%`;
-        
-        // Use colors from the concepts
-        decor.style.backgroundColor = colors[i % colors.length];
-        
-        visualContainer.appendChild(decor);
-        decorElements.push(decor);
+        // Remove the hidden text container after animation is created
+        if (textContainer.parentNode) {
+          textContainer.parentNode.removeChild(textContainer);
+        }
+      } catch (error) {
+        console.error('Error executing animation:', error);
       }
+    };
+    
+    // Set up intersection observer to only run animation when visible
+    if (containerRef.current) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const [entry] = entries;
+          setIsVisible(entry.isIntersecting);
+          
+          if (entry.isIntersecting) {
+            runAnimation();
+          } else if (animationInstance && animationInstance.pause) {
+            animationInstance.pause();
+          }
+        },
+        { threshold: 0.1 }
+      );
       
-      // Create animation
-      const timeline = anime.timeline({
-        loop: true,
-        easing: 'easeOutExpo'
-      });
-      
-      // Animate title
-      timeline.add({
-        targets: title,
-        opacity: [0, 1],
-        translateY: [-30, 0],
-        duration: 1000,
-        easing: 'easeOutElastic(1, .8)'
-      })
-      
-      // Animate concept cards
-      .add({
-        targets: conceptElements,
-        opacity: [0, 1],
-        scale: [0.8, 1],
-        delay: anime.stagger(150),
-        duration: 800,
-        easing: 'easeOutElastic(1, .6)'
-      })
-      
-      // Animate decorative elements
-      .add({
-        targets: decorElements,
-        opacity: [0, 0.6],
-        scale: [0, 1],
-        delay: anime.stagger(50),
-        duration: 600,
-        easing: 'easeOutQuad'
-      }, '-=400')
-      
-      // Animate concept cards hover effect
-      .add({
-        targets: conceptElements,
-        scale: [1, 1.05],
-        boxShadow: ['0 4px 6px rgba(0, 0, 0, 0.1)', '0 8px 15px rgba(0, 0, 0, 0.2)'],
-        delay: anime.stagger(150),
-        duration: 800,
-        easing: 'easeInOutQuad'
-      })
-      
-      // Pause for a moment
-      .add({
-        duration: 1000
-      })
-      
-      // Animate concept cards out
-      .add({
-        targets: conceptElements,
-        opacity: [1, 0],
-        scale: [1.05, 0.8],
-        delay: anime.stagger(100),
-        duration: 600,
-        easing: 'easeInQuad'
-      })
-      
-      // Animate decorative elements out
-      .add({
-        targets: decorElements,
-        opacity: [0.6, 0],
-        scale: [1, 0],
-        delay: anime.stagger(50),
-        duration: 400,
-        easing: 'easeInQuad'
-      }, '-=400')
-      
-      // Animate title out
-      .add({
-        targets: title,
-        opacity: [1, 0],
-        translateY: [0, 30],
-        duration: 800,
-        easing: 'easeInQuad'
-      }, '-=200');
-      
-      animationRef.current = timeline;
+      observer.observe(containerRef.current);
     }
     
     return () => {
-      if (animationRef.current) {
-        animationRef.current.pause();
+      // Clean up animation and observer
+      if (animationInstance && animationInstance.pause) {
+        animationInstance.pause();
+      }
+      
+      if (observer) {
+        observer.disconnect();
+      }
+      
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
       }
     };
-  }, [text, section]);
-
+  }, [key, text]);
+  
   return (
     <div 
-      ref={containerRef} 
-      className={`enhanced-text-animation h-[300px] w-full relative bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden ${className}`}
-    />
+      className={`relative w-full h-64 md:h-80 bg-gray-50 rounded-lg shadow-sm overflow-hidden ${className}`}
+      data-section={section}
+      data-text={text}
+    >
+      <div 
+        ref={containerRef} 
+        className="w-full h-full"
+        key={`animation-container-${key}`}
+      />
+      
+      {!isVisible && (
+        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+          <span>Scroll to view animation</span>
+        </div>
+      )}
+    </div>
   );
 };
 
