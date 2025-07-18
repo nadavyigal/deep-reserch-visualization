@@ -1,46 +1,46 @@
-import Link from "next/link";
+'use client'
+
+import AuthForm from '@/app/components/AuthForm';
+import UserProfile from '@/app/components/UserProfile';
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-8">
-      <div>
-        <h2 className="text-2xl font-semibold text-center border p-4 font-mono rounded-md">
-          Get started by choosing a template path from the /paths/ folder.
-        </h2>
-      </div>
-      <div>
-        <h1 className="text-6xl font-bold text-center">Make anything you imagine 🪄</h1>
-        <h2 className="text-2xl text-center font-light text-gray-500 pt-4">
-          This whole page will be replaced when you run your template path.
-        </h2>
-      </div>
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">AI Chat App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            An intelligent conversational app powered by AI models, featuring real-time responses
-            and seamless integration with Next.js and various AI providers.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">AI Image Generation App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            Create images from text prompts using AI, powered by the Replicate API and Next.js.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">Social Media App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            A feature-rich social platform with user profiles, posts, and interactions using
-            Firebase and Next.js.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">Voice Notes App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            A voice-based note-taking app with real-time transcription using Deepgram API, 
-            Firebase integration for storage, and a clean, simple interface built with Next.js.
-          </p>
+    <main className="flex min-h-screen flex-col items-center justify-between p-8 md:p-24">
+      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm flex flex-col gap-8">
+        <div className="w-full">
+          <h1 className="text-4xl font-bold text-center mb-12">Authentication Demo</h1>
+          
+          <div className="p-4 mb-6 bg-blue-100 border border-blue-400 text-blue-800 rounded">
+            <p className="font-medium">📝 Authentication Instructions</p>
+            <p>Use these test credentials to log in: <strong>user@example.com</strong> / <strong>password</strong></p>
+            <p className="mt-2 text-sm">Note: Only email/password login is available in this demo. Google OAuth has been disabled.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-xl font-bold mb-4">Sign In</h2>
+              <AuthForm />
+            </div>
+            
+            <div>
+              <h2 className="text-xl font-bold mb-4">User Profile</h2>
+              <UserProfile />
+            </div>
+          </div>
+          
+          <div className="mt-12 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <h2 className="text-xl font-bold mb-4">About This Implementation</h2>
+            <p className="mb-4">
+              This is a demonstration of NextAuth.js integration with Next.js App Router and React.
+              NextAuth.js is a complete authentication solution that provides:
+            </p>
+            <ul className="list-disc pl-6 mb-4 space-y-2">
+              <li>Secure JWT-based authentication</li>
+              <li>Credentials-based authentication</li>
+              <li>Session management</li>
+              <li>CSRF protection</li>
+            </ul>
+          </div>
         </div>
       </div>
     </main>

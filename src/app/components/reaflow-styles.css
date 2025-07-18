@@ -1,0 +1,367 @@
+/* Reaflow Chart Styles - Optimized for performance and containment */
+
+.reaflow-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent;
+  border-radius: 0.375rem;
+  position: relative;
+}
+
+.dark .reaflow-container {
+  background-color: #1f2937;
+}
+
+.reaflow-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Node styles - optimized for contained layout */
+.reaflow-node {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.reaflow-node:hover {
+  filter: brightness(110%);
+}
+
+.reaflow-node-body {
+  fill: #fff;
+  stroke: #4f46e5;
+  stroke-width: 2px;
+  rx: 5;
+  ry: 5;
+}
+
+.dark .reaflow-node-body {
+  fill: #1e293b;
+  stroke: #6366f1;
+}
+
+.reaflow-node-foreign-object {
+  overflow: visible;
+}
+
+.reaflow-node-text-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.reaflow-node-text {
+  font-size: 0.875rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  line-height: 1.25;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-weight: 500;
+  color: #1e293b;
+  overflow: hidden;
+  max-height: 100%;
+}
+
+.dark .reaflow-node-text {
+  color: #e2e8f0;
+}
+
+/* Edge styles - simplified */
+.reaflow-edge {
+  stroke: #64748b;
+  stroke-width: 1.5px;
+  fill: none;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.dark .reaflow-edge {
+  stroke: #94a3b8;
+}
+
+.reaflow-edge-arrow {
+  fill: #64748b;
+  stroke: none;
+}
+
+.dark .reaflow-edge-arrow {
+  fill: #94a3b8;
+}
+
+.reaflow-edge-text-container {
+  overflow: visible;
+}
+
+.reaflow-edge-text {
+  font-size: 0.75rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background-color: #fff;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #475569;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dark .reaflow-edge-text {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+/* Node type specific styles */
+.reaflow-node[data-type="process"] .reaflow-node-body {
+  fill: #f0f9ff;
+  stroke: #0ea5e9;
+}
+
+.dark .reaflow-node[data-type="process"] .reaflow-node-body {
+  fill: #0c4a6e;
+  stroke: #38bdf8;
+}
+
+.reaflow-node[data-type="decision"] .reaflow-node-body {
+  fill: #fef3c7;
+  stroke: #d97706;
+}
+
+.dark .reaflow-node[data-type="decision"] .reaflow-node-body {
+  fill: #78350f;
+  stroke: #f59e0b;
+}
+
+.reaflow-node[data-type="subprocess"] .reaflow-node-body {
+  fill: #f3e8ff;
+  stroke: #a855f7;
+}
+
+.dark .reaflow-node[data-type="subprocess"] .reaflow-node-body {
+  fill: #581c87;
+  stroke: #c084fc;
+}
+
+/* Loading and error states */
+.reaflow-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #ef4444;
+  font-size: 0.875rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.reaflow-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #6366f1;
+  font-size: 0.875rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Force container size constraints */
+.mermaid-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+}
+
+.mermaid-container svg {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Port styles - simplified */
+.reaflow-port {
+  fill: #cbd5e1;
+  stroke: #94a3b8;
+}
+
+.reaflow-port:hover {
+  fill: #e5e7eb;
+  stroke-width: 1.5;
+}
+
+/* Controls - simplified for better fit */
+.reaflow-controls {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+
+.reaflow-control-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.reaflow-control-button:hover {
+  background-color: #f3f4f6;
+}
+
+.dark .reaflow-control-button {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark .reaflow-control-button:hover {
+  background-color: #4b5563;
+}
+
+/* Mermaid Styles - optimized for containment */
+.mermaid {
+  font-family: 'Inter', Arial, sans-serif;
+  overflow: hidden;
+  width: 100%;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon,
+.mermaid .node path {
+  fill: #f3f4f6;
+  stroke: #6b7280;
+  stroke-width: 1px;
+}
+
+.mermaid .node.clickable {
+  cursor: pointer;
+}
+
+.mermaid .arrowheadPath {
+  fill: #6b7280;
+}
+
+.mermaid .edgePath .path {
+  stroke: #6b7280;
+  stroke-width: 1.5px;
+}
+
+.mermaid .edgeLabel {
+  background-color: #ffffff;
+  color: #374151;
+  padding: 2px;
+  border-radius: 2px;
+  font-size: 10px;
+}
+
+/* Dark mode for Mermaid */
+.dark .mermaid .node rect,
+.dark .mermaid .node circle,
+.dark .mermaid .node ellipse,
+.dark .mermaid .node polygon,
+.dark .mermaid .node path {
+  fill: #1f2937;
+  stroke: #9ca3af;
+}
+
+.dark .mermaid .arrowheadPath {
+  fill: #9ca3af;
+}
+
+.dark .mermaid .edgePath .path {
+  stroke: #9ca3af;
+}
+
+.dark .mermaid .edgeLabel {
+  background-color: #111827;
+  color: #e5e7eb;
+}
+
+/* Error states */
+.flowchart-error {
+  color: #ef4444;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: 0.375rem;
+  margin: 0.5rem 0;
+}
+
+/* Animation for nodes appearing */
+@keyframes nodeAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reaflow-node {
+  animation: nodeAppear 0.3s ease-out forwards;
+}
+
+/* Animation for edges appearing */
+@keyframes edgeAppear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.reaflow-edge {
+  animation: edgeAppear 0.5s ease-out forwards;
+}
+
+/* Responsive adjustments for flowcharts */
+@media (max-width: 640px) {
+  .reaflow-node-text {
+    font-size: 0.75rem;
+  }
+  
+  .reaflow-edge-text {
+    font-size: 0.65rem;
+  }
+  
+  .mermaid .edgeLabel {
+    font-size: 8px;
+  }
+} 
