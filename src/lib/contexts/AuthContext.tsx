@@ -1,142 +1,210 @@
 "use client";
 
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { 
-  signInWithPopup,
+  signInWithPopup, 
+  signInWithRedirect, 
   GoogleAuthProvider, 
-  onAuthStateChanged,
+  getRedirectResult,
   signOut as firebaseSignOut,
   setPersistence,
+  inMemoryPersistence,
   browserLocalPersistence,
-  browserSessionPersistence,
-  User
+  onAuthStateChanged,
+  Auth
 } from "firebase/auth";
-import { getAuth } from "firebase/auth";
-import { initializeApp } from 'firebase/app';
-
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-
-// Initialize Firebase in client-side only
-const getFirebaseAuth = () => {
-  if (typeof window === 'undefined') return null;
-  
-  try {
-    const app = initializeApp(firebaseConfig);
-    return getAuth(app);
-  } catch (error) {
-    // In case Firebase is already initialized
-    return getAuth();
-  }
-};
+import { User } from "firebase/auth";
+import { auth } from "../firebase/firebase";
 
 // Define the shape of our authentication context
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  signInWithGoogle: (rememberMe?: boolean) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
-// Create the context
+// Create the context with a default value
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Provider component that wraps the app
+// Custom hook to use the auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+// Provider component that wraps your app and makes auth object available
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [auth, setAuth] = useState(getFirebaseAuth());
+  const [isClient, setIsClient] = useState(false);
 
-  // Set up auth state listener
+  // Set isClient to true when component mounts (client-side only)
   useEffect(() => {
-    if (!auth) return;
+    setIsClient(true);
+  }, []);
+
+  // Check for redirect result on initial load
+  useEffect(() => {
+    if (!isClient) return; // Skip on server-side
+
+    const checkRedirectResult = async () => {
+      try {
+        // Check if there's a redirect result
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          console.log('User signed in after redirect:', result.user.email);
+          setUser(result.user);
+        }
+      } catch (error) {
+        console.error('Error checking redirect result:', error);
+        setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      }
+    };
+
+    checkRedirectResult();
+  }, [isClient]);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    if (!isClient) return; // Skip on server-side
+
+    console.log('Setting up auth state listener');
     
-    // Listen for auth state changes
+    // Check if auth is properly initialized
+    if (!auth || !('onAuthStateChanged' in auth)) {
+      console.error('Auth object is not properly initialized');
+      setError('Authentication service is not available. Please try again later.');
+      setLoading(false);
+      return () => {};
+    }
+    
     const unsubscribe = onAuthStateChanged(
       auth,
-      (authUser) => {
-        setUser(authUser);
+      (user) => {
+        setUser(user);
         setLoading(false);
+        setError(null);
+        console.log('Auth state changed:', user?.email || 'No user');
       },
-      (authError) => {
-        setError(authError.message);
+      (error) => {
+        console.error('Auth state change error:', error);
+        setError(error.message);
         setLoading(false);
       }
     );
-    
-    // Clean up listener
-    return unsubscribe;
-  }, [auth]);
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [isClient]);
 
   // Sign in with Google
-  const signInWithGoogle = useCallback(async (rememberMe = true) => {
-    if (!auth) {
-      setError("Authentication service unavailable");
+  const signInWithGoogle = async () => {
+    if (!isClient) {
+      console.error('Cannot sign in on server side');
       return;
     }
 
+    // Check if auth is properly initialized
+    if (!auth || !('signInWithPopup' in auth)) {
+      console.error('Auth object is not properly initialized for sign in');
+      setError('Authentication service is not available. Please try again later.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
     try {
-      setError(null);
-      setLoading(true);
-      
-      // Set persistence based on user preference
-      const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-      await setPersistence(auth, persistenceType);
-      
-      // Use Google provider with popup
+      console.log('Attempting to sign in with Google...');
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      await signInWithPopup(auth, provider);
+      
+      // Add scopes if needed
+      // provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+      
+      // Optional: Specify custom parameters
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      // Set persistence to LOCAL (survives browser restarts)
+      await setPersistence(auth, browserLocalPersistence);
+      
+      const result = await signInWithPopup(auth, provider);
+      console.log('Sign in successful:', result.user.email);
+      
+      // You can access the Google Access Token here if needed
+      // const credential = GoogleAuthProvider.credentialFromResult(result);
+      // const token = credential?.accessToken;
+      
     } catch (error: any) {
-      // Handle only specific errors with useful messages
+      console.error('Error signing in with Google:', error);
+      
+      // Handle specific errors
       if (error.code === 'auth/popup-closed-by-user') {
-        setError('Sign-in was cancelled');
+        setError('Sign-in popup was closed before completing the sign-in.');
       } else if (error.code === 'auth/popup-blocked') {
-        setError('Sign-in popup was blocked by your browser');
+        setError('Sign-in popup was blocked by the browser. Please allow popups for this site.');
+        
+        // Try redirect method as fallback
+        try {
+          console.log('Attempting to sign in with redirect as fallback...');
+          await signInWithRedirect(auth, new GoogleAuthProvider());
+        } catch (redirectError: any) {
+          console.error('Error signing in with redirect:', redirectError);
+          setError(redirectError.message || 'Failed to sign in with Google redirect');
+        }
       } else {
-        setError(error.message || 'Failed to sign in');
+        setError(error.message || 'Failed to sign in with Google');
       }
     } finally {
       setLoading(false);
     }
-  }, [auth]);
-
-  // Sign out
-  const signOut = useCallback(async () => {
-    if (!auth) return;
-    
-    try {
-      setError(null);
-      await firebaseSignOut(auth);
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign out');
-    }
-  }, [auth]);
-
-  // Context value
-  const value = {
-    user,
-    loading,
-    error,
-    signInWithGoogle,
-    signOut
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  // Sign out
+  const signOutUser = async () => {
+    if (!isClient) {
+      console.error('Cannot sign out on server side');
+      return;
+    }
+
+    // Check if auth is properly initialized
+    if (!auth || !('signOut' in auth)) {
+      console.error('Auth object is not properly initialized for sign out');
+      setError('Authentication service is not available. Please try again later.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await firebaseSignOut(auth);
+      console.log('User signed out successfully');
+    } catch (error: any) {
+      console.error('Error signing out:', error);
+      setError(error.message || 'Failed to sign out');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use a default value for server-side rendering
+  const value = {
+    user,
+    loading: isClient ? loading : true, // Always show loading on server-side
+    error,
+    signInWithGoogle,
+    signOut: signOutUser,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Export context
 export { AuthContext };

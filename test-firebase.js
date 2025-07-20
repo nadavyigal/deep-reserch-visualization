@@ -34,4 +34,4 @@ try {
   
 } catch (error) {
   console.error('\nError initializing Firebase:', error);
-} 
+}

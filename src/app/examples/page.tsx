@@ -1,11 +1,13 @@
-'use client'
-
 import React from 'react';
 import Link from 'next/link';
-import AppLayout from '../components/AppLayout';
-import SimpleChartGenerator from '../components/SimpleChartGenerator';
-import SimpleFlowchartGenerator from '../components/SimpleFlowchartGenerator';
+import ChartGenerator from '../components/ChartGenerator.new';
+import FlowchartGenerator from '../components/FlowchartGenerator';
 import AnimationGenerator from '../components/AnimationGenerator';
+
+export const metadata = {
+  title: 'Visualization Examples | Deep Research Visualization',
+  description: 'Examples of graphs, flowcharts, and animations for research visualization',
+};
 
 export default function ExamplesPage() {
   // Example data for visualizations
@@ -126,77 +128,81 @@ Method D,45`,
   ];
 
   return (
-    <AppLayout>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Visualization Examples</h1>
-          <p className="text-gray-600 mb-4">
-            Explore different types of visualizations for research data and concepts
-          </p>
-        </div>
+    <main className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Visualization Examples</h1>
+        <p className="text-gray-600 mb-4">
+          Explore different types of visualizations for research data and concepts
+        </p>
+        <Link 
+          href="/"
+          className="text-blue-600 hover:text-blue-800 transition-colors"
+        >
+          ← Back to Home
+        </Link>
+      </div>
 
-        {/* Graphs Section */}
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-6 pb-2 border-b">Graphs</h2>
-          <p className="mb-6 text-gray-700">
-            Graphs provide quantitative visualization of data relationships, trends, and distributions.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {graphExamples.map((example, index) => (
-              <div key={`graph-${index}`} className="bg-white dark:bg-dark-800 rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-semibold mb-4">{example.title}</h3>
-                <div className="h-64">
-                  <SimpleChartGenerator 
-                    data={example.data}
-                    type={example.type as any}
-                    title={example.title}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Flowcharts Section */}
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-6 pb-2 border-b">Flowcharts</h2>
-          <p className="mb-6 text-gray-700">
-            Flowcharts illustrate processes, workflows, and decision paths in a structured visual format.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {flowchartExamples.map((example, index) => (
-              <div key={`flowchart-${index}`} className="bg-white dark:bg-dark-800 rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-semibold mb-4">{example.title}</h3>
-                <div className="h-64 overflow-auto">
-                  <SimpleFlowchartGenerator 
-                    data={example.data}
-                    title={example.title}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Animations Section */}
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-6 pb-2 border-b">Animations</h2>
-          <p className="mb-6 text-gray-700">
-            Animations bring concepts to life through dynamic visual representations of key ideas and processes.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {animationExamples.map((example, index) => (
-              <div key={`animation-${index}`} className="bg-white dark:bg-dark-800 rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-semibold mb-4">{example.title}</h3>
-                <AnimationGenerator 
-                  text={example.text}
-                  section={example.title}
+      {/* Graphs Section */}
+      <section className="mb-16">
+        <h2 className="text-2xl font-bold mb-6 pb-2 border-b">Graphs</h2>
+        <p className="mb-6 text-gray-700">
+          Graphs provide quantitative visualization of data relationships, trends, and distributions.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {graphExamples.map((example, index) => (
+            <div key={`graph-${index}`} className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-xl font-semibold mb-4">{example.title}</h3>
+              <div className="h-64">
+                <ChartGenerator 
+                  data={example.data}
+                  type={example.type as any}
+                  title={example.title}
                 />
               </div>
-            ))}
-          </div>
-        </section>
-      </div>
-    </AppLayout>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Flowcharts Section */}
+      <section className="mb-16">
+        <h2 className="text-2xl font-bold mb-6 pb-2 border-b">Flowcharts</h2>
+        <p className="mb-6 text-gray-700">
+          Flowcharts illustrate processes, workflows, and decision paths in a structured visual format.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {flowchartExamples.map((example, index) => (
+            <div key={`flowchart-${index}`} className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-xl font-semibold mb-4">{example.title}</h3>
+              <div className="h-64 overflow-auto">
+                <FlowchartGenerator 
+                  markdownContent={example.data}
+                  id={`flowchart-example-${index}`}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Animations Section */}
+      <section className="mb-16">
+        <h2 className="text-2xl font-bold mb-6 pb-2 border-b">Animations</h2>
+        <p className="mb-6 text-gray-700">
+          Animations bring concepts to life through dynamic visual representations of key ideas and processes.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {animationExamples.map((example, index) => (
+            <div key={`animation-${index}`} className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-xl font-semibold mb-4">{example.title}</h3>
+              <AnimationGenerator 
+                text={example.text}
+                section={example.title}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
   );
-} 
+}

@@ -1,12 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // Removed swcMinify as it's no longer needed in Next.js 15
   // Disable source maps in production to reduce build size
   productionBrowserSourceMaps: false,
@@ -35,13 +29,12 @@ const nextConfig = {
   // Add experimental features to handle non-ASCII paths
   experimental: {
     // Enable better handling of non-ASCII paths
-  },
-  // Moved from experimental to root level as per Next.js recommendation
-  outputFileTracingExcludes: {
-    '*': [
-      'node_modules/**',
-    ],
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/**',
+      ],
+    },
   },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

@@ -1,48 +1,77 @@
 'use client'
 
-import AuthForm from '@/app/components/AuthForm';
-import UserProfile from '@/app/components/UserProfile';
+import React from 'react';
+import Link from 'next/link';
+import AppLayout from './components/AppLayout';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-8 md:p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm flex flex-col gap-8">
-        <div className="w-full">
-          <h1 className="text-4xl font-bold text-center mb-12">Authentication Demo</h1>
-          
-          <div className="p-4 mb-6 bg-blue-100 border border-blue-400 text-blue-800 rounded">
-            <p className="font-medium">📝 Authentication Instructions</p>
-            <p>Use these test credentials to log in: <strong>user@example.com</strong> / <strong>password</strong></p>
-            <p className="mt-2 text-sm">Note: Only email/password login is available in this demo. Google OAuth has been disabled.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h2 className="text-xl font-bold mb-4">Sign In</h2>
-              <AuthForm />
+    <AppLayout>
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl sm:tracking-tight lg:text-6xl">
+            Deep Research Visualization
+          </h1>
+          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500 dark:text-gray-300">
+            Powerful tools for visualizing research data and concepts
+          </p>
+        </div>
+
+        <div className="mt-16">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Graphs</h3>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+                  Visualize quantitative data with interactive charts and graphs
+                </p>
+                <div className="mt-4">
+                  <Link 
+                    href="/examples" 
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    View Examples
+                  </Link>
+                </div>
+              </div>
             </div>
-            
-            <div>
-              <h2 className="text-xl font-bold mb-4">User Profile</h2>
-              <UserProfile />
+
+            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Flowcharts</h3>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+                  Create clear process visualizations and decision trees
+                </p>
+                <div className="mt-4">
+                  <Link 
+                    href="/examples" 
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    View Examples
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div className="mt-12 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold mb-4">About This Implementation</h2>
-            <p className="mb-4">
-              This is a demonstration of NextAuth.js integration with Next.js App Router and React.
-              NextAuth.js is a complete authentication solution that provides:
-            </p>
-            <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li>Secure JWT-based authentication</li>
-              <li>Credentials-based authentication</li>
-              <li>Session management</li>
-              <li>CSRF protection</li>
-            </ul>
+
+            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Animations</h3>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+                  Bring concepts to life with dynamic animations
+                </p>
+                <div className="mt-4">
+                  <Link 
+                    href="/examples" 
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    View Examples
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </main>
+    </AppLayout>
   );
 }
