@@ -20,4 +20,4 @@ echo You can now navigate to the new directory and run the application:
 echo cd "%target_dir%"
 echo npm run dev
 echo.
-pause 
+pause

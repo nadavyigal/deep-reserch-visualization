@@ -1,57 +1,34 @@
-'use client'
-
+import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 export default function DebugLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-
-  const isActive = (path: string) => {
-    return pathname === path;
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Debug Tools</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Link href="/" className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400">
+              Home
+            </Link>
+            <span className="text-gray-400">/</span>
+            <Link href="/debug" className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400">
+              Debug
+            </Link>
+          </div>
+          
+          <div className="text-sm px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-300 rounded-full">
+            Debug Mode
+          </div>
+        </div>
+      </header>
       
-      <div className="flex flex-wrap gap-2 mb-8">
-        <Link 
-          href="/debug"
-          className={`px-4 py-2 rounded-md ${isActive('/debug') 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
-        >
-          Main
-        </Link>
-        <Link 
-          href="/debug/auth"
-          className={`px-4 py-2 rounded-md ${isActive('/debug/auth') 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
-        >
-          Auth Debug
-        </Link>
-        <Link 
-          href="/debug/firebase"
-          className={`px-4 py-2 rounded-md ${isActive('/debug/firebase') 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
-        >
-          Firebase Debug
-        </Link>
-        <Link 
-          href="/"
-          className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
-        >
-          Back to Home
-        </Link>
-      </div>
-      
-      {children}
+      <main className="py-6">
+        {children}
+      </main>
     </div>
   );
-} 
+}

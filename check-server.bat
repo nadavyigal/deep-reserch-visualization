@@ -22,4 +22,4 @@ echo Opening test page in your browser...
 
 :end
 endlocal
-pause 
+pause

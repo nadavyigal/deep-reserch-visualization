@@ -1,150 +1,135 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function LoginButton() {
-  const { user, loading: authLoading, error: authError, signInWithEmail, signOut } = useAuth();
+  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [rememberMe, setRememberMe] = useState(true);
 
-  // Clear error after 5 seconds
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
-
-  // Sync errors from auth context
-  useEffect(() => {
-    if (authError) setError(authError);
-  }, [authError]);
-
-  // Handle sign in with credentials
-  const handleSignIn = useCallback(async () => {
+  // Handle sign in with Google
+  const handleSignIn = async () => {
     setLoading(true);
-    setError(null);
     try {
-      await signInWithEmail('user@example.com', 'password', rememberMe);
-    } catch (error: any) {
-      setError(error.message || 'Sign-in failed');
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Error in sign in handler:', error);
     } finally {
       setLoading(false);
     }
-  }, [signInWithEmail, rememberMe]);
+  };
 
   // Handle sign out
-  const handleSignOut = useCallback(async () => {
+  const handleSignOut = async () => {
     setLoading(true);
-    setError(null);
     try {
       await signOut();
-    } catch (error: any) {
-      setError(error.message || 'Sign-out failed');
+    } catch (error) {
+      console.error('Error in sign out handler:', error);
     } finally {
       setLoading(false);
     }
-  }, [signOut]);
+  };
 
-  // Loading state
+  // Show loading state
   if (loading || authLoading) {
-    return <LoadingButton />;
-  }
-
-  // Signed out state
-  if (!user) {
     return (
-      <div className="w-full max-w-xs mx-auto space-y-3">
-        <button
-          onClick={handleSignIn}
-          className="flex items-center justify-center w-full px-4 py-2 bg-white border border-gray-300 
-                     rounded-md shadow-sm hover:bg-gray-50 transition-colors"
-        >
-          <EmailIcon />
-          <span className="ml-2">Sign in with Email</span>
-        </button>
-        
-        <div className="flex items-center justify-center gap-2">
-          <input
-            type="checkbox"
-            id="remember-me"
-            checked={rememberMe}
-            onChange={() => setRememberMe(!rememberMe)}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <label htmlFor="remember-me" className="text-sm text-gray-600 dark:text-gray-300">
-            Remember me
-          </label>
-        </div>
-        
-        {error && (
-          <div className="p-2 mt-2 text-sm text-center text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-md">
-            {error}
-          </div>
-        )}
-      </div>
+      <button 
+        disabled
+        className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-500 rounded-md w-full max-w-xs mx-auto cursor-not-allowed"
+      >
+        <LoadingSpinner />
+        <span>Loading...</span>
+      </button>
     );
   }
 
-  // Signed in state
-  return (
-    <div className="w-full max-w-xs mx-auto">
+  // Show sign in button if user is not logged in
+  if (!user) {
+    return (
       <button
-        onClick={handleSignOut}
-        className="flex items-center justify-center w-full px-4 py-2 bg-red-600 text-white 
-                   rounded-md hover:bg-red-700 transition-colors"
+        onClick={handleSignIn}
+        className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 w-full max-w-xs mx-auto transition-colors"
       >
-        <LogoutIcon />
-        <span className="ml-2">Sign out</span>
+        <GoogleIcon />
+        <span>Sign in with Google</span>
       </button>
-      
-      {error && (
-        <div className="p-2 mt-2 text-sm text-center text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-md">
-          {error}
-        </div>
-      )}
-    </div>
+    );
+  }
+
+  // Show sign out button if user is logged in
+  return (
+    <button
+      onClick={handleSignOut}
+      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 w-full max-w-xs mx-auto transition-colors"
+    >
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        className="h-5 w-5" 
+        viewBox="0 0 20 20" 
+        fill="currentColor"
+      >
+        <path 
+          fillRule="evenodd" 
+          d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-3 1a1 1 0 10-2 0v3a1 1 0 102 0V8zM8 9a1 1 0 00-2 0v1a1 1 0 102 0V9z" 
+          clipRule="evenodd" 
+        />
+      </svg>
+      <span>Sign Out</span>
+    </button>
   );
 }
 
-// Loading button component
-function LoadingButton() {
+// Google icon component
+function GoogleIcon() {
   return (
-    <div className="w-full max-w-xs mx-auto">
-      <button 
-        disabled
-        className="flex items-center justify-center w-full px-4 py-2 bg-gray-200 text-gray-500 
-                   rounded-md cursor-not-allowed"
-      >
-        <svg className="w-5 h-5 mr-2 animate-spin" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-        Loading...
-      </button>
-    </div>
-  );
-}
-
-// Email icon component
-function EmailIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-      <polyline points="22,6 12,13 2,6"/>
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 48 48" 
+      className="w-5 h-5"
+    >
+      <path 
+        fill="#FFC107" 
+        d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" 
+      />
+      <path 
+        fill="#FF3D00" 
+        d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" 
+      />
+      <path 
+        fill="#4CAF50" 
+        d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" 
+      />
+      <path 
+        fill="#1976D2" 
+        d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" 
+      />
     </svg>
   );
 }
 
-// Logout icon component
-function LogoutIcon() {
+// Loading spinner component
+function LoadingSpinner() {
   return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
+    <svg 
+      className="animate-spin h-5 w-5 text-gray-500" 
+      xmlns="http://www.w3.org/2000/svg" 
+      fill="none" 
+      viewBox="0 0 24 24"
+    >
+      <circle 
+        className="opacity-25" 
+        cx="12" 
+        cy="12" 
+        r="10" 
+        stroke="currentColor" 
+        strokeWidth="4"
+      />
+      <path 
+        className="opacity-75" 
+        fill="currentColor" 
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
     </svg>
   );
-} 
+}

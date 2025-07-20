@@ -6,4 +6,4 @@ start cmd /k "npm run dev"
 echo Waiting for server to start...
 timeout /t 10 /nobreak
 
-call check-server.bat 
+call check-server.bat

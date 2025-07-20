@@ -30,17 +30,17 @@ export default function FirebaseDebugPage() {
       logDebug('Checking Firebase services...');
       
       // Check Auth
-      const authInitialized = auth && 'currentUser' in auth;
+      const authInitialized = !!auth && 'currentUser' in auth;
       setFirebaseStatus(prev => ({ ...prev, auth: authInitialized }));
       logDebug(`Auth service initialized: ${authInitialized}`);
       
       // Check Firestore
-      const dbInitialized = db && 'collection' in db;
+      const dbInitialized = !!db;
       setFirebaseStatus(prev => ({ ...prev, db: dbInitialized }));
       logDebug(`Firestore service initialized: ${dbInitialized}`);
       
       // Check Storage
-      const storageInitialized = storage && 'ref' in storage;
+      const storageInitialized = !!storage;
       setFirebaseStatus(prev => ({ ...prev, storage: storageInitialized }));
       logDebug(`Storage service initialized: ${storageInitialized}`);
     };
@@ -160,4 +160,4 @@ export default function FirebaseDebugPage() {
       </div>
     </div>
   );
-} 
+}

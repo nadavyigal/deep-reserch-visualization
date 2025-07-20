@@ -1,54 +1,199 @@
-import { auth, db, storage } from "./firebase";
-import {
-  signOut,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  updateDoc,
+'use client';
+
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  updateDoc, 
   deleteDoc,
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+  DocumentData,
+  QueryConstraint,
+  DocumentReference,
+  CollectionReference
+} from 'firebase/firestore';
+import { 
+  ref, 
+  uploadBytes, 
+  getDownloadURL, 
+  deleteObject,
+  StorageReference
+} from 'firebase/storage';
+import { db, storage } from './firebase';
 
-// Auth functions
-export const logoutUser = () => signOut(auth);
-
-export const signInWithGoogle = async () => {
-  const provider = new GoogleAuthProvider();
+// Firestore utilities
+export const createDocument = async <T extends DocumentData>(
+  collectionName: string, 
+  docId: string, 
+  data: T
+): Promise<void> => {
   try {
-    const result = await signInWithPopup(auth, provider);
-    return result.user;
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
+    const docRef = doc(db, collectionName, docId) as DocumentReference<T>;
+    await setDoc(docRef, data);
   } catch (error) {
-    console.error("Error signing in with Google", error);
+    console.error('Error creating document:', error);
     throw error;
   }
 };
 
-// Firestore functions
-export const addDocument = (collectionName: string, data: any) =>
-  addDoc(collection(db, collectionName), data);
-
-export const getDocuments = async (collectionName: string) => {
-  const querySnapshot = await getDocs(collection(db, collectionName));
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+export const getDocument = async <T extends DocumentData>(
+  collectionName: string, 
+  docId: string
+): Promise<T | null> => {
+  try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
+    const docRef = doc(db, collectionName, docId) as DocumentReference<T>;
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data();
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error getting document:', error);
+    throw error;
+  }
 };
 
-export const updateDocument = (collectionName: string, id: string, data: any) =>
-  updateDoc(doc(db, collectionName, id), data);
+export const updateDocument = async <T extends DocumentData>(
+  collectionName: string, 
+  docId: string, 
+  data: Partial<T>
+): Promise<void> => {
+  try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
+    const docRef = doc(db, collectionName, docId) as DocumentReference<T>;
+    await updateDoc(docRef, data as DocumentData);
+  } catch (error) {
+    console.error('Error updating document:', error);
+    throw error;
+  }
+};
 
-export const deleteDocument = (collectionName: string, id: string) =>
-  deleteDoc(doc(db, collectionName, id));
+export const deleteDocument = async (
+  collectionName: string, 
+  docId: string
+): Promise<void> => {
+  try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
+    const docRef = doc(db, collectionName, docId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    throw error;
+  }
+};
 
-// Storage functions
-export const uploadFile = async (file: File, path: string) => {
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  return getDownloadURL(storageRef);
+export const queryDocuments = async <T extends DocumentData>(
+  collectionName: string,
+  constraints: QueryConstraint[] = []
+): Promise<T[]> => {
+  try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
+    const collectionRef = collection(db, collectionName) as CollectionReference<T>;
+    const q = query(collectionRef, ...constraints);
+    const querySnapshot = await getDocs(q);
+    
+    const results: T[] = [];
+    querySnapshot.forEach((doc) => {
+      results.push({ id: doc.id, ...doc.data() } as T);
+    });
+    
+    return results;
+  } catch (error) {
+    console.error('Error querying documents:', error);
+    throw error;
+  }
+};
+
+// Storage utilities
+export const uploadFile = async (
+  path: string, 
+  file: File
+): Promise<string> => {
+  try {
+    if (!storage) {
+      throw new Error('Storage is not initialized');
+    }
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    throw error;
+  }
+};
+
+export const getFileURL = async (path: string): Promise<string> => {
+  try {
+    if (!storage) {
+      throw new Error('Storage is not initialized');
+    }
+    const storageRef = ref(storage, path);
+    return await getDownloadURL(storageRef);
+  } catch (error) {
+    console.error('Error getting file URL:', error);
+    throw error;
+  }
+};
+
+export const deleteFile = async (path: string): Promise<void> => {
+  try {
+    if (!storage) {
+      throw new Error('Storage is not initialized');
+    }
+    const storageRef = ref(storage, path);
+    await deleteObject(storageRef);
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    throw error;
+  }
+};
+
+// Helper functions
+export const generateUniqueId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
+
+export const createQueryConstraints = (
+  filters: { field: string; operator: string; value: any }[] = [],
+  sortBy?: { field: string; direction: 'asc' | 'desc' },
+  limitTo?: number
+): QueryConstraint[] => {
+  const constraints: QueryConstraint[] = [];
+  
+  // Add filters
+  filters.forEach(filter => {
+    constraints.push(where(filter.field, filter.operator as any, filter.value));
+  });
+  
+  // Add sorting
+  if (sortBy) {
+    constraints.push(orderBy(sortBy.field, sortBy.direction));
+  }
+  
+  // Add limit
+  if (limitTo) {
+    constraints.push(limit(limitTo));
+  }
+  
+  return constraints;
 };

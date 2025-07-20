@@ -283,13 +283,20 @@ const CustomEdge = ({ ...props }: EdgeProps) => {
 
 const ReaflowChart: React.FC<ReaflowChartProps> = ({ mermaidCode, height = 400, width = 800 }) => {
   const [elkLayout, setElkLayout] = useState<ElkRoot | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
   
   // Parse mermaid code
   const { nodes, edges } = useMemo(() => {
     try {
-      return parseMermaidCode(mermaidCode);
+      setParseError(null);
+      const result = parseMermaidCode(mermaidCode);
+      if (result.nodes.length === 0 || (result.nodes.length === 1 && result.nodes[0].id === 'placeholder')) {
+        setParseError('No valid nodes found in flowchart code');
+      }
+      return result;
     } catch (error) {
       console.error('Error parsing mermaid code:', error);
+      setParseError(`Parsing error: ${(error as Error)?.message || 'Unknown error'}`);
       return { nodes: [{ id: 'error', text: 'Error parsing flowchart' }], edges: [] };
     }
   }, [mermaidCode]);
@@ -300,14 +307,13 @@ const ReaflowChart: React.FC<ReaflowChartProps> = ({ mermaidCode, height = 400, 
     
     const timer = setTimeout(() => {
       setElkLayout({
-        id: 'root',
         layoutOptions: {
           'elk.algorithm': 'layered',
           'elk.direction': 'DOWN',
           'elk.spacing.nodeNode': '50',
           'elk.layered.spacing.nodeNodeBetweenLayers': '80'
         }
-      });
+      } as ElkRoot);
     }, 0);
     
     return () => clearTimeout(timer);
@@ -315,7 +321,14 @@ const ReaflowChart: React.FC<ReaflowChartProps> = ({ mermaidCode, height = 400, 
   
   return (
     <div className="reaflow-container" style={{ width: '100%', height }}>
-      {nodes.length > 0 && (
+      {parseError ? (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-red-500 dark:text-red-400 text-sm text-center p-4">
+            <p className="font-medium">Flowchart Parse Error</p>
+            <p className="mt-1">{parseError}</p>
+          </div>
+        </div>
+      ) : nodes.length > 0 && nodes[0].id !== 'error' ? (
         <Canvas
           className="reaflow-canvas"
           maxWidth={width}
@@ -326,16 +339,21 @@ const ReaflowChart: React.FC<ReaflowChartProps> = ({ mermaidCode, height = 400, 
             height: node.height || (node.text.length > 20 ? 60 : 40),
           }))}
           edges={edges}
-          node={<CustomNode />}
-          edge={<CustomEdge />}
+          node={(props: NodeProps) => <CustomNode {...props} />}
+          edge={(props: EdgeProps) => <CustomEdge {...props} />}
           fit
           animated
           zoomable
           readonly
           pannable
           direction="DOWN"
-          elkLayout={elkLayout}
         />
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-gray-400 dark:text-gray-500 text-sm text-center p-4">
+            {nodes[0]?.id === 'error' ? nodes[0].text : 'No valid flowchart data to display'}
+          </div>
+        </div>
       )}
     </div>
   );

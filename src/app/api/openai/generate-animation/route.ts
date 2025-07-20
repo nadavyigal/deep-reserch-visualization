@@ -22,7 +22,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const contentToAnimate = section && section !== 'Full Document' ? section : text;
+    // Use section text if provided, otherwise use the full text
+    // Limit to 1000 characters to avoid token limits
+    const contentToAnimate = section && section !== 'Full Document' 
+      ? section.substring(0, 1000) 
+      : text.substring(0, 1000);
 
     // Set a timeout for the OpenAI request
     const timeoutPromise = new Promise((_, reject) => {
@@ -33,7 +37,7 @@ export async function POST(req: NextRequest) {
     const openaiPromise = (async () => {
       const prompt = `
         Create an anime.js animation that visually represents the following content:
-        "${contentToAnimate.substring(0, 500)}"
+        "${contentToAnimate}"
         
         Return ONLY valid JavaScript code that uses the anime.js library.
         The code should:
@@ -43,6 +47,8 @@ export async function POST(req: NextRequest) {
         4. Append all created elements to the 'container' parameter
         5. Use a clean, modern visual style with appropriate colors and timing
         6. Return the animation instance at the end of the function
+        7. Ensure all animations stay within the container boundaries
+        8. Use relative positioning and percentages for sizing and positioning
         
         Example format:
         \`\`\`
@@ -72,7 +78,7 @@ export async function POST(req: NextRequest) {
         messages: [
           { 
             role: "system", 
-            content: "You are an expert in anime.js animations and visual storytelling. Create beautiful, functional animations that represent text content visually. Always use named functions, not anonymous functions." 
+            content: "You are an expert in anime.js animations and visual storytelling. Create beautiful, functional animations that represent text content visually. Always use named functions, not anonymous functions. Extract key concepts from the text and visualize them." 
           },
           { role: "user", content: prompt }
         ],
@@ -118,4 +124,4 @@ export async function POST(req: NextRequest) {
     console.error('Error generating animation:', error);
     return NextResponse.json({ animationCode: getFallbackAnimation("Fallback animation") });
   }
-} 
+}

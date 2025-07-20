@@ -40,6 +40,9 @@ export default function DocumentsPage() {
 
       try {
         setLoading(true);
+        if (!db) {
+          throw new Error('Database is not initialized');
+        }
         const documentsRef = collection(db, 'documents');
         
         // Modified query to avoid needing composite index
@@ -95,10 +98,13 @@ export default function DocumentsPage() {
       setDeleting(documentId);
       
       // Delete from Firestore
+      if (!db) {
+        throw new Error('Database is not initialized');
+      }
       await deleteDoc(doc(db, 'documents', documentId));
       
       // Delete from Storage if fileName exists
-      if (fileName) {
+      if (fileName && storage) {
         const fileRef = ref(storage, `documents/${user.uid}/${fileName}`);
         await deleteObject(fileRef);
       }

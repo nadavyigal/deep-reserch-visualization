@@ -1,94 +1,113 @@
-# Markdown Animation Studio
+# Deep Research Visualization
 
-This application allows users to import large Markdown documents, automatically parse headings, and generate interactive animation placeholders beneath each section. Users can insert their own JavaScript animation code (powered by Anime.js) to enhance reports with engaging visuals.
+A Next.js application for visualizing deep research data with Firebase integration.
 
 ## Features
 
-- **Markdown Import & Parsing**: Paste or import Markdown documents and automatically get animation containers beneath each heading.
-- **Customizable Animations with Anime.js**: Add custom JavaScript animations to each section.
-- **User Authentication**: Google Sign-In required for editing animations.
-- **Live Preview**: See your animations in real-time as you edit.
-- **Export Options**: Save your animated document as HTML for sharing.
-- **Persistent Storage**: Automatically saves your work to localStorage.
+- Firebase Authentication with Google Sign-in
+- Firestore Database integration
+- Firebase Storage for file uploads
+- Next.js App Router for modern routing
+- React 18 with TypeScript
+- Tailwind CSS for styling
+- Dark/Light mode support
 
 ## Getting Started
 
-1. Clone this repository
+### Prerequisites
+
+- Node.js 18.17.0 or later
+- npm or yarn
+- Firebase project
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/nadavyigal/deep-reserch-visualization.git
+   cd deep-reserch-visualization
+   ```
+
 2. Install dependencies:
-   ```
+   ```bash
    npm install
+   # or
+   yarn install
    ```
-3. Set up Firebase:
-   - Create a Firebase project at [https://console.firebase.google.com/](https://console.firebase.google.com/)
-   - Enable Google Authentication
-   - Add your Firebase configuration to `src/lib/firebase/firebase.ts`
 
-4. Run the development server:
+3. Create a `.env.local` file in the root directory with your Firebase configuration:
    ```
+   NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+   ```
+
+4. Start the development server:
+   ```bash
    npm run dev
+   # or
+   yarn dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## How to Use
+### Special Considerations for Windows Users
 
-1. **Sign In**: Use the Google Sign-In button to authenticate.
-2. **Import Markdown**: Paste your Markdown content in the editor or use the Import button.
-3. **Add Animations**: Click the "Add Animation" button beneath any heading.
-4. **Write Animation Code**: Use Anime.js to create animations. The `container` variable gives you access to the animation container.
-5. **Preview**: Toggle between Edit and Preview modes to see your animations.
-6. **Export**: Click "Export HTML" to save your document with animations as an HTML file.
+If you're experiencing issues with special characters in file paths (like Hebrew characters), use the provided batch files:
 
-## Animation Examples
+- `start-app.bat` - Starts the application with a clean environment
+- `check-server.bat` - Checks if the Next.js server is running
+- `start-and-check.bat` - Starts the server and verifies its status
+- `move-project.bat` - Helps copy the project to a directory without special characters
 
-Here's a simple example of an Anime.js animation you can add:
+## Project Structure
 
-```javascript
-// Create elements
-const circle = document.createElement('div');
-circle.style.width = '50px';
-circle.style.height = '50px';
-circle.style.borderRadius = '50%';
-circle.style.background = '#3498db';
-circle.style.position = 'absolute';
-container.appendChild(circle);
-
-// Create animation
-const animation = anime({
-  targets: circle,
-  translateX: [
-    { value: 250, duration: 1000, delay: 500 },
-    { value: 0, duration: 1000, delay: 500 }
-  ],
-  translateY: [
-    { value: -100, duration: 500, delay: 1000 },
-    { value: 0, duration: 500, delay: 1000 }
-  ],
-  scale: [
-    { value: 2, duration: 500, delay: 0 },
-    { value: 1, duration: 500, delay: 1000 }
-  ],
-  backgroundColor: [
-    { value: '#FF5733', duration: 500 },
-    { value: '#3498db', duration: 500, delay: 1000 }
-  ],
-  easing: 'easeInOutQuad',
-  loop: true
-});
-
-return animation;
+```
+src/
+├── app/                  # Next.js App Router
+│   ├── api/              # API routes
+│   ├── components/       # React components
+│   ├── debug/            # Debug tools
+│   ├── globals.css       # Global styles
+│   ├── layout.tsx        # Root layout
+│   ├── page.tsx          # Home page
+│   └── providers.tsx     # Client providers
+├── lib/
+│   ├── contexts/         # React contexts
+│   │   └── AuthContext.tsx  # Authentication context
+│   ├── firebase/         # Firebase configuration
+│   │   ├── firebase.ts      # Firebase initialization
+│   │   └── firebaseUtils.ts # Firebase utility functions
+│   └── hooks/            # Custom React hooks
+│       └── useAuth.ts    # Authentication hook
 ```
 
-## Technologies Used
+## Debug Tools
 
-- Next.js 14 with App Router
-- React
-- TypeScript
-- Tailwind CSS
-- Firebase Authentication
-- Anime.js
-- react-markdown
+The application includes debug tools to help troubleshoot issues:
+
+1. Navigate to `/debug` to access the debug dashboard
+2. Use the Firebase debug page to check Firebase initialization and authentication status
+
+## Deployment
+
+This project can be deployed to Vercel with minimal configuration:
+
+1. Push your code to GitHub
+2. Import the project in Vercel
+3. Add your environment variables in the Vercel dashboard
+4. Deploy
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [Firebase](https://firebase.google.com/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [React](https://reactjs.org/)

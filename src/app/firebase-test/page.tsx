@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { initializeFirebase, auth, db } from '../../lib/firebase/firebase';
+import { auth, db } from '../../lib/firebase/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
 export default function FirebaseTestPage() {
@@ -12,26 +12,23 @@ export default function FirebaseTestPage() {
   useEffect(() => {
     const testFirebase = async () => {
       try {
-        // Initialize Firebase
-        const { app } = initializeFirebase();
-        
-        if (!app) {
-          throw new Error('Firebase app initialization failed');
+        // Check Firebase services
+        if (!auth) {
+          throw new Error('Firebase auth initialization failed');
         }
         
-        // Test Firebase app initialization
-        const appName = app.name;
-        const appOptions = app.options;
+        // Test Firebase auth initialization  
+        const authName = 'Firebase Auth';
         
         setAppInfo({
-          appName,
-          appOptions
+          authName,
+          authExists: !!auth
         });
         
         // Test Firestore connection
         try {
-          if (db.instance) {
-            const testCollection = collection(db.instance, 'test');
+          if (db) {
+            const testCollection = collection(db, 'test');
             await getDocs(testCollection);
             console.log('Firestore connection successful');
           }

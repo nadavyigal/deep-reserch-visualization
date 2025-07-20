@@ -282,660 +282,371 @@ function createAnimation(anime, container) {
 }
 `;
 
-export const advancedTextAnimation = `
+// New customizable text animation template
+export const customTextAnimation = `
 function createAnimation(anime, container) {
+  // Extract text from the container's parent or use default text
+  const parentText = container.parentElement?.textContent?.trim() || '';
+  const words = parentText.split(/\\s+/).filter(word => word.length > 3).slice(0, 5);
+  
+  // If no words found, use default words
+  const displayWords = words.length > 0 ? words : ['Visualization', 'Animation', 'Interactive', 'Dynamic', 'Content'];
+  
   // Create a wrapper for the animation
   const wrapper = document.createElement('div');
   wrapper.style.position = 'relative';
   wrapper.style.width = '100%';
   wrapper.style.height = '100%';
   wrapper.style.display = 'flex';
+  wrapper.style.flexDirection = 'column';
   wrapper.style.alignItems = 'center';
   wrapper.style.justifyContent = 'center';
   wrapper.style.overflow = 'hidden';
   container.appendChild(wrapper);
   
-  // Extract keywords from parent container's text
-  let keywords = ['concept', 'research', 'analysis', 'data', 'visualization'];
+  // Create title
+  const title = document.createElement('h2');
+  title.textContent = 'Key Concepts';
+  title.style.fontSize = '24px';
+  title.style.fontWeight = 'bold';
+  title.style.color = '#3498db';
+  title.style.opacity = '0';
+  title.style.marginBottom = '20px';
+  wrapper.appendChild(title);
   
-  // Look for text in parent elements
-  let parentElement = container.parentElement;
-  while (parentElement) {
-    const textContent = parentElement.textContent || '';
-    if (textContent.length > 20) {
-      // Extract words from text content
-      const words = textContent
-        .toLowerCase()
-        .replace(/[^\\w\\s]/g, '')
-        .split(/\\s+/)
-        .filter(word => 
-          word.length > 3 && 
-          !['and', 'the', 'this', 'that', 'with', 'from', 'have', 'for'].includes(word)
-        );
-      
-      if (words.length >= 3) {
-        // Get most frequent words
-        const wordCount = {};
-        words.forEach(word => {
-          wordCount[word] = (wordCount[word] || 0) + 1;
-        });
-        
-        keywords = Object.entries(wordCount)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
-          .map(entry => entry[0]);
-          
-        break;
-      }
-    }
-    parentElement = parentElement.parentElement;
-  }
+  // Create text elements container
+  const textContainer = document.createElement('div');
+  textContainer.style.display = 'flex';
+  textContainer.style.flexDirection = 'column';
+  textContainer.style.alignItems = 'center';
+  textContainer.style.width = '80%';
+  wrapper.appendChild(textContainer);
   
-  // Create central node
-  const centralNode = document.createElement('div');
-  centralNode.textContent = 'Key Concepts';
-  centralNode.style.position = 'absolute';
-  centralNode.style.left = '50%';
-  centralNode.style.top = '50%';
-  centralNode.style.transform = 'translate(-50%, -50%)';
-  centralNode.style.padding = '12px 20px';
-  centralNode.style.borderRadius = '20px';
-  centralNode.style.backgroundColor = '#1e293b';
-  centralNode.style.color = 'white';
-  centralNode.style.fontWeight = 'bold';
-  centralNode.style.fontSize = '18px';
-  centralNode.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-  centralNode.style.zIndex = '10';
-  centralNode.style.opacity = '0';
-  wrapper.appendChild(centralNode);
+  // Create text elements
+  const textElements = [];
+  const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'];
   
-  // Create SVG for lines
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', '100%');
-  svg.setAttribute('height', '100%');
-  svg.style.position = 'absolute';
-  svg.style.top = '0';
-  svg.style.left = '0';
-  svg.style.zIndex = '5';
-  wrapper.appendChild(svg);
-  
-  // Create keyword nodes and connecting lines
-  const keywordNodes = [];
-  const lines = [];
-  
-  keywords.forEach((keyword, index) => {
-    // Create keyword node
-    const node = document.createElement('div');
-    node.textContent = keyword;
-    node.style.position = 'absolute';
-    node.style.padding = '8px 16px';
-    node.style.borderRadius = '16px';
-    node.style.backgroundColor = '#f1f5f9';
-    node.style.color = '#334155';
-    node.style.fontWeight = '500';
-    node.style.fontSize = '14px';
-    node.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-    node.style.zIndex = '10';
-    node.style.opacity = '0';
-    wrapper.appendChild(node);
-    keywordNodes.push(node);
-    
-    // Create connecting line
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('stroke', 'rgba(99, 102, 241, 0.4)');
-    line.setAttribute('stroke-width', '2');
-    line.setAttribute('stroke-dasharray', '4');
-    svg.appendChild(line);
-    lines.push(line);
+  displayWords.forEach((word, i) => {
+    const textEl = document.createElement('div');
+    textEl.textContent = word;
+    textEl.style.fontSize = '18px';
+    textEl.style.margin = '8px';
+    textEl.style.padding = '10px 20px';
+    textEl.style.borderRadius = '4px';
+    textEl.style.background = colors[i % colors.length];
+    textEl.style.color = '#fff';
+    textEl.style.opacity = '0';
+    textEl.style.transform = 'translateX(-20px)';
+    textEl.style.width = '80%';
+    textEl.style.textAlign = 'center';
+    textContainer.appendChild(textEl);
+    textElements.push(textEl);
   });
   
-  // Position nodes in a circle around the central node
-  const radius = Math.min(wrapper.offsetWidth, wrapper.offsetHeight) * 0.35;
-  keywordNodes.forEach((node, index) => {
-    const angle = (index / keywords.length) * Math.PI * 2;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    
-    node.style.left = \`calc(50% + \${x}px)\`;
-    node.style.top = \`calc(50% + \${y}px)\`;
-    node.style.transform = 'translate(-50%, -50%)';
+  // Create animation
+  const animation = anime.timeline({
+    loop: true
   });
   
-  // Update line positions
-  const updateLines = () => {
-    const centralRect = centralNode.getBoundingClientRect();
-    const centralX = centralRect.left + centralRect.width / 2;
-    const centralY = centralRect.top + centralRect.height / 2;
-    
-    keywordNodes.forEach((node, index) => {
-      const nodeRect = node.getBoundingClientRect();
-      const nodeX = nodeRect.left + nodeRect.width / 2;
-      const nodeY = nodeRect.top + nodeRect.height / 2;
-      
-      // Convert to SVG coordinate space
-      const svgRect = svg.getBoundingClientRect();
-      const x1 = centralX - svgRect.left;
-      const y1 = centralY - svgRect.top;
-      const x2 = nodeX - svgRect.left;
-      const y2 = nodeY - svgRect.top;
-      
-      lines[index].setAttribute('x1', x1);
-      lines[index].setAttribute('y1', y1);
-      lines[index].setAttribute('x2', x2);
-      lines[index].setAttribute('y2', y2);
-    });
-  };
-  
-  // Animation timeline
-  const timeline = anime.timeline({
-    easing: 'easeOutElastic(1, .5)',
-    update: updateLines
-  });
-  
-  // Animate central node
-  timeline.add({
-    targets: centralNode,
-    scale: [0, 1],
+  animation.add({
+    targets: title,
     opacity: [0, 1],
-    duration: 800
-  });
-  
-  // Animate keyword nodes
-  timeline.add({
-    targets: keywordNodes,
+    translateY: [-30, 0],
+    duration: 1000,
+    easing: 'easeOutElastic(1, .8)'
+  })
+  .add({
+    targets: textElements,
     opacity: [0, 1],
-    scale: [0, 1],
-    delay: anime.stagger(100),
-    duration: 600
-  }, '-=400');
-  
-  // Animate lines
-  timeline.add({
-    targets: lines,
-    opacity: [0, 1],
-    strokeDashoffset: [anime.setDashoffset, 0],
-    delay: anime.stagger(100),
-    duration: 600
-  }, '-=600');
-  
-  // Add pulsing animation to central node
-  timeline.add({
-    targets: centralNode,
-    scale: [1, 1.1, 1],
-    duration: 1500,
-    loop: true,
+    translateX: [-20, 0],
+    delay: anime.stagger(200),
+    duration: 800,
+    easing: 'easeOutQuad'
+  })
+  .add({
+    targets: textElements,
+    scale: [1, 1.05],
+    delay: anime.stagger(200),
+    duration: 400,
     easing: 'easeInOutQuad'
+  })
+  .add({
+    delay: 1000
+  })
+  .add({
+    targets: textElements,
+    opacity: [1, 0],
+    translateX: [0, 20],
+    delay: anime.stagger(200),
+    duration: 800,
+    easing: 'easeInQuad'
+  })
+  .add({
+    targets: title,
+    opacity: [1, 0],
+    translateY: [0, 30],
+    duration: 1000,
+    easing: 'easeInQuad'
   });
   
-  // Initial update of lines
-  setTimeout(updateLines, 100);
-  
-  // Update lines on window resize
-  window.addEventListener('resize', updateLines);
-  
-  return timeline;
+  return animation;
 }
 `;
 
-// Define animation templates for specific content types
-export const flowProcessAnimation = `
-function createAnimation(anime, container, options = {}) {
-  // Create a wrapper for the animation
+// Advanced text animation with icons and cards
+export const advancedTextAnimation = `
+function createAnimation(anime, container) {
+  // Extract text from the container's parent or use default text
+  const parentText = container.parentElement?.textContent?.trim() || '';
+  
+  // Remove common stop words
+  const stopWords = new Set([
+    'a', 'an', 'the', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 
+    'be', 'been', 'being', 'to', 'of', 'for', 'with', 'by', 'about', 
+    'against', 'between', 'into', 'through', 'during', 'before', 'after',
+    'above', 'below', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over',
+    'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when',
+    'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more',
+    'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own',
+    'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just', 'should',
+    'now', 'this', 'that', 'these', 'those'
+  ]);
+  
+  // Split text into words, filter out stop words and short words
+  const words = parentText
+    .replace(/[^\\w\\s]/g, '') // Remove punctuation
+    .split(/\\s+/)
+    .filter(word => word.length > 3 && !stopWords.has(word.toLowerCase()))
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize first letter
+  
+  // Count word frequency
+  const wordCount = new Map();
+  words.forEach(word => {
+    wordCount.set(word, (wordCount.get(word) || 0) + 1);
+  });
+  
+  // Sort by frequency and get top words
+  const displayWords = Array.from(wordCount.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(entry => entry[0]);
+  
+  // If no words found, use default words
+  if (displayWords.length === 0) {
+    displayWords.push('Visualization', 'Animation', 'Interactive', 'Dynamic', 'Content', 'Data');
+  }
+  
+  // Create wrapper
   const wrapper = document.createElement('div');
   wrapper.style.position = 'relative';
   wrapper.style.width = '100%';
   wrapper.style.height = '100%';
   wrapper.style.display = 'flex';
+  wrapper.style.flexDirection = 'column';
   wrapper.style.alignItems = 'center';
   wrapper.style.justifyContent = 'center';
   wrapper.style.overflow = 'hidden';
+  wrapper.style.padding = '20px';
   container.appendChild(wrapper);
   
-  // Extract keywords or use defaults
-  const keywords = options.keywords || ['Step 1', 'Step 2', 'Step 3', 'Step 4', 'Step 5'];
-  
-  // Create process flow elements
-  const processSteps = [];
-  const arrows = [];
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-  
   // Create title
-  const title = document.createElement('div');
-  title.textContent = 'Process Flow';
-  title.style.position = 'absolute';
-  title.style.top = '10px';
-  title.style.left = '50%';
-  title.style.transform = 'translateX(-50%)';
-  title.style.fontSize = '18px';
+  const title = document.createElement('h2');
+  title.textContent = 'Key Concepts';
+  title.style.fontSize = '24px';
   title.style.fontWeight = 'bold';
+  title.style.color = '#3498db';
   title.style.opacity = '0';
+  title.style.marginBottom = '30px';
+  title.style.textAlign = 'center';
   wrapper.appendChild(title);
   
-  // Create process steps
-  keywords.slice(0, 5).forEach((keyword, index) => {
-    const step = document.createElement('div');
-    step.textContent = keyword;
-    step.style.position = 'absolute';
-    step.style.padding = '10px 15px';
-    step.style.borderRadius = '8px';
-    step.style.backgroundColor = colors[index % colors.length];
-    step.style.color = 'white';
-    step.style.fontWeight = 'bold';
-    step.style.fontSize = '14px';
-    step.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-    step.style.opacity = '0';
-    step.style.zIndex = '2';
+  // Create concept container
+  const conceptContainer = document.createElement('div');
+  conceptContainer.style.display = 'flex';
+  conceptContainer.style.flexWrap = 'wrap';
+  conceptContainer.style.justifyContent = 'center';
+  conceptContainer.style.alignItems = 'center';
+  conceptContainer.style.width = '100%';
+  conceptContainer.style.maxWidth = '600px';
+  wrapper.appendChild(conceptContainer);
+  
+  // Create concept elements
+  const conceptElements = [];
+  const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+  
+  displayWords.forEach((word, i) => {
+    // Create concept card
+    const card = document.createElement('div');
+    card.style.backgroundColor = colors[i % colors.length];
+    card.style.color = '#fff';
+    card.style.padding = '12px 20px';
+    card.style.margin = '10px';
+    card.style.borderRadius = '8px';
+    card.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.8)';
+    card.style.display = 'flex';
+    card.style.alignItems = 'center';
+    card.style.justifyContent = 'center';
+    card.style.minWidth = '120px';
+    card.style.textAlign = 'center';
     
-    // Position steps in a horizontal line
-    const stepWidth = 120;
-    const totalWidth = Math.min(keywords.length, 5) * stepWidth;
-    const startX = (wrapper.offsetWidth - totalWidth) / 2;
-    step.style.left = (startX + index * stepWidth) + 'px';
-    step.style.top = '50%';
-    step.style.transform = 'translateY(-50%)';
+    // Create icon based on word index
+    const icon = document.createElement('div');
+    icon.style.marginRight = '10px';
+    icon.style.fontSize = '20px';
     
-    wrapper.appendChild(step);
-    processSteps.push(step);
+    // Simple icon mapping
+    const icons = ['📊', '🔍', '📈', '🔄', '📱', '🌟'];
+    icon.textContent = icons[i % icons.length];
     
-    // Create arrow (except for the last step)
-    if (index < keywords.length - 1 && index < 4) {
-      const arrow = document.createElement('div');
-      arrow.style.position = 'absolute';
-      arrow.style.width = '30px';
-      arrow.style.height = '2px';
-      arrow.style.backgroundColor = '#94a3b8';
-      arrow.style.left = (startX + index * stepWidth + 100) + 'px';
-      arrow.style.top = '50%';
-      arrow.style.zIndex = '1';
-      arrow.style.opacity = '0';
-      
-      // Add arrow head
-      const arrowHead = document.createElement('div');
-      arrowHead.style.position = 'absolute';
-      arrowHead.style.right = '0';
-      arrowHead.style.top = '-3px';
-      arrowHead.style.width = '0';
-      arrowHead.style.height = '0';
-      arrowHead.style.borderTop = '4px solid transparent';
-      arrowHead.style.borderBottom = '4px solid transparent';
-      arrowHead.style.borderLeft = '6px solid #94a3b8';
-      arrow.appendChild(arrowHead);
-      
-      wrapper.appendChild(arrow);
-      arrows.push(arrow);
-    }
+    card.appendChild(icon);
+    
+    // Create text element
+    const textEl = document.createElement('span');
+    textEl.textContent = word;
+    textEl.style.fontSize = '16px';
+    textEl.style.fontWeight = '500';
+    
+    card.appendChild(textEl);
+    conceptContainer.appendChild(card);
+    conceptElements.push(card);
   });
   
-  // Animation timeline
+  // Create visual elements
+  const visualContainer = document.createElement('div');
+  visualContainer.style.position = 'absolute';
+  visualContainer.style.top = '0';
+  visualContainer.style.left = '0';
+  visualContainer.style.width = '100%';
+  visualContainer.style.height = '100%';
+  visualContainer.style.pointerEvents = 'none';
+  visualContainer.style.zIndex = '-1';
+  wrapper.appendChild(visualContainer);
+  
+  // Create decorative elements
+  const decorElements = [];
+  for (let i = 0; i < 15; i++) {
+    const decor = document.createElement('div');
+    decor.style.position = 'absolute';
+    decor.style.borderRadius = '50%';
+    decor.style.opacity = '0';
+    
+    // Randomize size
+    const size = 5 + Math.random() * 15;
+    decor.style.width = \`\${size}px\`;
+    decor.style.height = \`\${size}px\`;
+    
+    // Randomize position
+    decor.style.left = \`\${Math.random() * 100}%\`;
+    decor.style.top = \`\${Math.random() * 100}%\`;
+    
+    // Use colors from the concepts
+    decor.style.backgroundColor = colors[i % colors.length];
+    
+    visualContainer.appendChild(decor);
+    decorElements.push(decor);
+  }
+  
+  // Create animation
   const timeline = anime.timeline({
-    easing: 'easeOutQuad'
+    loop: true,
+    easing: 'easeOutExpo'
   });
   
   // Animate title
   timeline.add({
     targets: title,
     opacity: [0, 1],
-    translateY: [-10, 0],
-    duration: 800
-  });
+    translateY: [-30, 0],
+    duration: 1000,
+    easing: 'easeOutElastic(1, .8)'
+  })
   
-  // Animate process steps
-  timeline.add({
-    targets: processSteps,
+  // Animate concept cards
+  .add({
+    targets: conceptElements,
     opacity: [0, 1],
-    translateY: ['-60%', '-50%'],
-    delay: anime.stagger(200),
-    duration: 800
-  }, '-=400');
+    scale: [0.8, 1],
+    delay: anime.stagger(150),
+    duration: 800,
+    easing: 'easeOutElastic(1, .6)'
+  })
   
-  // Animate arrows
-  timeline.add({
-    targets: arrows,
-    opacity: [0, 1],
-    width: [0, 30],
-    duration: 600,
-    delay: anime.stagger(200)
-  }, '-=600');
-  
-  // Add highlight animation
-  timeline.add({
-    targets: processSteps,
-    scale: [1, 1.05, 1],
-    backgroundColor: (el, i) => {
-      const color = colors[i % colors.length];
-      return [color, '#6366f1', color];
-    },
-    delay: anime.stagger(400),
-    duration: 1200
-  });
-  
-  return timeline;
-}
-`;
-
-export const networkConnectionAnimation = `
-function createAnimation(anime, container, options = {}) {
-  // Create a wrapper for the animation
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'relative';
-  wrapper.style.width = '100%';
-  wrapper.style.height = '100%';
-  wrapper.style.display = 'flex';
-  wrapper.style.alignItems = 'center';
-  wrapper.style.justifyContent = 'center';
-  wrapper.style.overflow = 'hidden';
-  container.appendChild(wrapper);
-  
-  // Extract keywords or use defaults
-  const keywords = options.keywords || ['Node 1', 'Node 2', 'Node 3', 'Node 4', 'Node 5', 'Node 6'];
-  
-  // Create SVG for the network
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', '100%');
-  svg.setAttribute('height', '100%');
-  svg.style.position = 'absolute';
-  svg.style.top = '0';
-  svg.style.left = '0';
-  wrapper.appendChild(svg);
-  
-  // Create nodes
-  const nodes = [];
-  const nodeElements = [];
-  const connections = [];
-  const nodeRadius = 30;
-  
-  // Create node positions in a network layout
-  keywords.slice(0, 8).forEach((keyword, index) => {
-    // Create positions in a circular or force-directed-like layout
-    let x, y;
-    
-    if (index === 0) {
-      // Center node
-      x = wrapper.offsetWidth / 2;
-      y = wrapper.offsetHeight / 2;
-    } else {
-      // Surrounding nodes in a circle
-      const angle = ((index - 1) / (keywords.length - 1)) * Math.PI * 2;
-      const radius = Math.min(wrapper.offsetWidth, wrapper.offsetHeight) * 0.35;
-      x = wrapper.offsetWidth / 2 + Math.cos(angle) * radius;
-      y = wrapper.offsetHeight / 2 + Math.sin(angle) * radius;
-    }
-    
-    nodes.push({ x, y, keyword });
-    
-    // Create node element
-    const node = document.createElement('div');
-    node.textContent = keyword;
-    node.style.position = 'absolute';
-    node.style.left = x + 'px';
-    node.style.top = y + 'px';
-    node.style.transform = 'translate(-50%, -50%)';
-    node.style.width = (nodeRadius * 2) + 'px';
-    node.style.height = (nodeRadius * 2) + 'px';
-    node.style.borderRadius = '50%';
-    node.style.backgroundColor = index === 0 ? '#3b82f6' : '#f1f5f9';
-    node.style.color = index === 0 ? 'white' : '#334155';
-    node.style.display = 'flex';
-    node.style.alignItems = 'center';
-    node.style.justifyContent = 'center';
-    node.style.fontSize = '12px';
-    node.style.fontWeight = 'bold';
-    node.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-    node.style.opacity = '0';
-    node.style.zIndex = '2';
-    wrapper.appendChild(node);
-    nodeElements.push(node);
-    
-    // Create connections to center node
-    if (index > 0) {
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', nodes[0].x);
-      line.setAttribute('y1', nodes[0].y);
-      line.setAttribute('x2', x);
-      line.setAttribute('y2', y);
-      line.setAttribute('stroke', '#cbd5e1');
-      line.setAttribute('stroke-width', '2');
-      line.setAttribute('stroke-dasharray', '5,5');
-      line.setAttribute('opacity', '0');
-      svg.appendChild(line);
-      connections.push(line);
-    }
-  });
-  
-  // Animation timeline
-  const timeline = anime.timeline({
-    easing: 'easeOutElastic(1, .5)'
-  });
-  
-  // Animate center node first
-  timeline.add({
-    targets: nodeElements[0],
-    opacity: [0, 1],
+  // Animate decorative elements
+  .add({
+    targets: decorElements,
+    opacity: [0, 0.6],
     scale: [0, 1],
-    duration: 800
-  });
-  
-  // Animate other nodes
-  timeline.add({
-    targets: nodeElements.slice(1),
-    opacity: [0, 1],
-    scale: [0, 1],
-    delay: anime.stagger(100),
-    duration: 600
-  }, '-=400');
-  
-  // Animate connections
-  timeline.add({
-    targets: connections,
-    opacity: [0, 0.7],
-    strokeDashoffset: [anime.setDashoffset, 0],
+    delay: anime.stagger(50),
     duration: 600,
-    delay: anime.stagger(100)
-  }, '-=600');
-  
-  // Add pulse animation to center node
-  timeline.add({
-    targets: nodeElements[0],
-    scale: [1, 1.1, 1],
-    duration: 1500,
-    loop: true,
-    easing: 'easeInOutQuad'
-  });
-  
-  // Add data flow animation along connections
-  connections.forEach((connection, index) => {
-    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    marker.setAttribute('r', '3');
-    marker.setAttribute('fill', '#3b82f6');
-    marker.setAttribute('opacity', '0');
-    svg.appendChild(marker);
-    
-    const markerAnimation = anime({
-      targets: marker,
-      opacity: [0, 1, 0],
-      easing: 'linear',
-      duration: 2000,
-      loop: true,
-      delay: index * 300,
-      update: function(anim) {
-        const startX = parseFloat(connection.getAttribute('x1'));
-        const startY = parseFloat(connection.getAttribute('y1'));
-        const endX = parseFloat(connection.getAttribute('x2'));
-        const endY = parseFloat(connection.getAttribute('y2'));
-        
-        const progress = anim.progress / 100;
-        const x = startX + (endX - startX) * progress;
-        const y = startY + (endY - startY) * progress;
-        
-        marker.setAttribute('cx', x);
-        marker.setAttribute('cy', y);
-      }
-    });
-  });
-  
-  return timeline;
-}
-`;
-
-export const timelineAnimation = `
-function createAnimation(anime, container, options = {}) {
-  // Create a wrapper for the animation
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'relative';
-  wrapper.style.width = '100%';
-  wrapper.style.height = '100%';
-  wrapper.style.display = 'flex';
-  wrapper.style.alignItems = 'center';
-  wrapper.style.justifyContent = 'center';
-  wrapper.style.overflow = 'hidden';
-  container.appendChild(wrapper);
-  
-  // Extract keywords or use defaults
-  const keywords = options.keywords || ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5'];
-  
-  // Create timeline elements
-  const timelineContainer = document.createElement('div');
-  timelineContainer.style.position = 'relative';
-  timelineContainer.style.width = '80%';
-  timelineContainer.style.height = '150px';
-  wrapper.appendChild(timelineContainer);
-  
-  // Create timeline line
-  const line = document.createElement('div');
-  line.style.position = 'absolute';
-  line.style.top = '50%';
-  line.style.left = '0';
-  line.style.width = '0%'; // Start at 0 width for animation
-  line.style.height = '4px';
-  line.style.backgroundColor = '#cbd5e1';
-  line.style.borderRadius = '2px';
-  timelineContainer.appendChild(line);
-  
-  // Create timeline points and labels
-  const points = [];
-  const labels = [];
-  
-  keywords.slice(0, 5).forEach((keyword, index) => {
-    const position = index / (Math.min(keywords.length, 5) - 1) * 100;
-    
-    // Create point
-    const point = document.createElement('div');
-    point.style.position = 'absolute';
-    point.style.top = '50%';
-    point.style.left = position + '%';
-    point.style.width = '16px';
-    point.style.height = '16px';
-    point.style.borderRadius = '50%';
-    point.style.backgroundColor = '#3b82f6';
-    point.style.transform = 'translate(-50%, -50%)';
-    point.style.opacity = '0';
-    point.style.zIndex = '2';
-    timelineContainer.appendChild(point);
-    points.push(point);
-    
-    // Create label
-    const label = document.createElement('div');
-    label.textContent = keyword;
-    label.style.position = 'absolute';
-    label.style.top = index % 2 === 0 ? 'calc(50% + 20px)' : 'calc(50% - 40px)';
-    label.style.left = position + '%';
-    label.style.transform = 'translateX(-50%)';
-    label.style.fontSize = '14px';
-    label.style.fontWeight = 'bold';
-    label.style.color = '#334155';
-    label.style.opacity = '0';
-    label.style.textAlign = 'center';
-    label.style.width = '100px';
-    timelineContainer.appendChild(label);
-    labels.push(label);
-    
-    // Create connecting line to label
-    const connector = document.createElement('div');
-    connector.style.position = 'absolute';
-    connector.style.top = '50%';
-    connector.style.left = position + '%';
-    connector.style.width = '2px';
-    connector.style.height = index % 2 === 0 ? '20px' : '40px';
-    connector.style.backgroundColor = '#cbd5e1';
-    connector.style.transform = index % 2 === 0 ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)';
-    connector.style.opacity = '0';
-    timelineContainer.appendChild(connector);
-    labels.push(connector); // Add to labels array for animation
-  });
-  
-  // Animation timeline
-  const timeline = anime.timeline({
     easing: 'easeOutQuad'
-  });
+  }, '-=400')
   
-  // Animate the timeline line
-  timeline.add({
-    targets: line,
-    width: ['0%', '100%'],
+  // Animate concept cards hover effect
+  .add({
+    targets: conceptElements,
+    scale: [1, 1.05],
+    boxShadow: ['0 4px 6px rgba(0, 0, 0, 0.1)', '0 8px 15px rgba(0, 0, 0, 0.2)'],
+    delay: anime.stagger(150),
+    duration: 800,
+    easing: 'easeInOutQuad'
+  })
+  
+  // Pause for a moment
+  .add({
     duration: 1000
-  });
+  })
   
-  // Animate points
-  timeline.add({
-    targets: points,
-    opacity: [0, 1],
-    scale: [0, 1],
-    delay: anime.stagger(200),
-    duration: 600
-  }, '-=800');
+  // Animate concept cards out
+  .add({
+    targets: conceptElements,
+    opacity: [1, 0],
+    scale: [1.05, 0.8],
+    delay: anime.stagger(100),
+    duration: 600,
+    easing: 'easeInQuad'
+  })
   
-  // Animate labels and connectors
-  timeline.add({
-    targets: labels,
-    opacity: [0, 1],
-    translateY: function(el, i) {
-      if (i % 2 === 0) return [0, 0]; // Connectors
-      return (i % 4 < 2) ? [10, 0] : [-10, 0]; // Labels
-    },
-    delay: anime.stagger(200, {start: 200}),
-    duration: 600
-  }, '-=800');
+  // Animate decorative elements out
+  .add({
+    targets: decorElements,
+    opacity: [0.6, 0],
+    scale: [1, 0],
+    delay: anime.stagger(50),
+    duration: 400,
+    easing: 'easeInQuad'
+  }, '-=400')
   
-  // Add highlight animation
-  timeline.add({
-    targets: points,
-    scale: [1, 1.3, 1],
-    backgroundColor: ['#3b82f6', '#8b5cf6', '#3b82f6'],
-    delay: anime.stagger(400),
-    duration: 1000
-  });
+  // Animate title out
+  .add({
+    targets: title,
+    opacity: [1, 0],
+    translateY: [0, 30],
+    duration: 800,
+    easing: 'easeInQuad'
+  }, '-=200');
   
   return timeline;
 }
 `;
 
-// Get a random animation template based on the animation type
-export const getRandomTemplate = (animationType: string = 'concept'): string => {
-  // Select template based on animation type
-  switch (animationType) {
-    case 'data':
-      return dataVisualizationAnimation;
-    case 'process':
-      return flowProcessAnimation;
-    case 'network':
-      return networkConnectionAnimation;
-    case 'timeline':
-      return timelineAnimation;
-    case 'concept':
-      return advancedTextAnimation;
-    default:
-      // Fallback to random selection for unknown types
-      if (Math.random() > 0.3) {
-        return advancedTextAnimation;
-      }
-      
-      const templates = [
-        basicCirclesAnimation,
-        textRevealAnimation,
-        dataVisualizationAnimation
-      ];
-      
+// Get a random animation template
+export const getRandomTemplate = (): string => {
+  const templates = [
+    advancedTextAnimation, // Prioritize the advanced text animation
+    customTextAnimation,
+    dataVisualizationAnimation,
+    textRevealAnimation,
+    basicCirclesAnimation
+  ];
+  
+  // Return the advanced text animation most of the time
+  if (Math.random() < 0.7) {
+    return templates[0];
+  }
+  
+  // Otherwise return a random template
   const randomIndex = Math.floor(Math.random() * templates.length);
   return templates[randomIndex];
-  }
-}; 
+};

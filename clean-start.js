@@ -28,4 +28,4 @@ try {
   execSync('npx next dev', { stdio: 'inherit' });
 } catch (error) {
   console.error('Error starting Next.js development server:', error);
-} 
+}
