@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { auth, initializeFirebase } from '@/lib/firebase/firebase';
+import { auth } from '@/lib/firebase/firebase';
 import Link from 'next/link';
 
 export default function AuthDebugPage() {
@@ -25,12 +25,10 @@ export default function AuthDebugPage() {
       setEnvVars(firebaseConfig);
       
       // Check if Firebase is initialized
-      const { app, auth: authInstance } = initializeFirebase();
-      
-      if (app) {
-        setFirebaseStatus('Firebase app initialized successfully');
+      if (auth) {
+        setFirebaseStatus('Firebase auth initialized successfully');
       } else {
-        setFirebaseStatus('Firebase app initialization failed');
+        setFirebaseStatus('Firebase auth initialization failed');
       }
     } catch (error: any) {
       setFirebaseStatus(`Firebase error: ${error.message || 'Unknown error'}`);

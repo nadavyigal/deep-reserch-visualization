@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 
 // Simple standalone component for testing auth
 export default function AuthTest() {
-  const { user, loading, error, signInWithEmail, signOut } = useAuth();
+  const { user, loading, error, signInWithGoogle, signOut } = useAuth();
   const [authStatus, setAuthStatus] = useState<string>('Checking authentication status...');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -20,7 +20,7 @@ export default function AuthTest() {
       setAuthStatus('Authentication error');
       setErrorMessage(error);
     } else if (user) {
-      setAuthStatus(`Signed in as ${user.email || user.name || 'User'}`);
+      setAuthStatus(`Signed in as ${user.email || user.displayName || 'User'}`);
     } else {
       setAuthStatus('Not signed in');
     }
@@ -31,7 +31,7 @@ export default function AuthTest() {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-      await signInWithEmail(email, password);
+      await signInWithGoogle();
     } catch (err: any) {
       console.error('Sign in error:', err);
       setErrorMessage(err.message || 'Failed to sign in');

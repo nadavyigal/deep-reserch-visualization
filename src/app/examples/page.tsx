@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import ChartGenerator from '../components/ChartGenerator.new';
+import SimpleChartGenerator from '../components/SimpleChartGenerator';
 import FlowchartGenerator from '../components/FlowchartGenerator';
 import AnimationGenerator from '../components/AnimationGenerator';
 
@@ -153,7 +153,7 @@ Method D,45`,
             <div key={`graph-${index}`} className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-xl font-semibold mb-4">{example.title}</h3>
               <div className="h-64">
-                <ChartGenerator 
+                <SimpleChartGenerator 
                   data={example.data}
                   type={example.type as any}
                   title={example.title}
@@ -176,8 +176,8 @@ Method D,45`,
               <h3 className="text-xl font-semibold mb-4">{example.title}</h3>
               <div className="h-64 overflow-auto">
                 <FlowchartGenerator 
-                  markdownContent={example.data}
-                  id={`flowchart-example-${index}`}
+                  initialCode={example.data}
+                  height={256}
                 />
               </div>
             </div>

@@ -56,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkRedirectResult = async () => {
       try {
         // Check if there's a redirect result
+        if (!auth) return;
         const result = await getRedirectResult(auth);
         if (result?.user) {
           console.log('User signed in after redirect:', result.user.email);
@@ -77,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('Setting up auth state listener');
     
     // Check if auth is properly initialized
-    if (!auth || !('onAuthStateChanged' in auth)) {
+    if (!auth) {
       console.error('Auth object is not properly initialized');
       setError('Authentication service is not available. Please try again later.');
       setLoading(false);
@@ -111,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Check if auth is properly initialized
-    if (!auth || !('signInWithPopup' in auth)) {
+    if (!auth) {
       console.error('Auth object is not properly initialized for sign in');
       setError('Authentication service is not available. Please try again later.');
       return;
@@ -175,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Check if auth is properly initialized
-    if (!auth || !('signOut' in auth)) {
+    if (!auth) {
       console.error('Auth object is not properly initialized for sign out');
       setError('Authentication service is not available. Please try again later.');
       return;
@@ -197,9 +198,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Use a default value for server-side rendering
   const value = {
-    user,
+    user: isClient ? user : null, // No user on server-side
     loading: isClient ? loading : true, // Always show loading on server-side
-    error,
+    error: isClient ? error : null, // No error on server-side
     signInWithGoogle,
     signOut: signOutUser,
   };

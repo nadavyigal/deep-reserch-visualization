@@ -50,19 +50,19 @@ export default function UserProfile() {
     <div className="w-full max-w-md mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
       <div className="text-center mb-6">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full mb-4">
-          {user.image ? (
+          {user.photoURL ? (
             <img 
-              src={user.image} 
-              alt={user.name || 'User'} 
+              src={user.photoURL} 
+              alt={user.displayName || 'User'} 
               className="w-full h-full rounded-full object-cover"
             />
           ) : (
             <span className="text-2xl font-bold text-blue-600 dark:text-blue-300">
-              {user.name ? user.name[0].toUpperCase() : (user.email ? user.email[0].toUpperCase() : 'U')}
+              {user.displayName ? user.displayName[0].toUpperCase() : (user.email ? user.email[0].toUpperCase() : 'U')}
             </span>
           )}
         </div>
-        <h2 className="text-xl font-semibold">{user.name || 'User'}</h2>
+        <h2 className="text-xl font-semibold">{user.displayName || 'User'}</h2>
         <p className="text-sm text-gray-500">
           {user.email}
         </p>
@@ -73,7 +73,7 @@ export default function UserProfile() {
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-gray-500">User ID</span>
-            <span className="font-mono text-sm truncate max-w-[180px]">{user.id}</span>
+            <span className="font-mono text-sm truncate max-w-[180px]">{user.uid}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Email</span>
@@ -81,7 +81,7 @@ export default function UserProfile() {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Name</span>
-            <span>{user.name || 'Not provided'}</span>
+            <span>{user.displayName || 'Not provided'}</span>
           </div>
         </div>
       </div>

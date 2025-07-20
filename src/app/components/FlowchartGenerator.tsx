@@ -64,34 +64,50 @@ function FlowchartGenerator({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    try {
-      // Reset mermaid to ensure clean initialization
-      if (window.mermaid) {
-        // @ts-ignore
-        window.mermaid.mermaidAPI.reset();
+    const initMermaid = async () => {
+      try {
+        // Wait for mermaid to be fully loaded
+        if (typeof mermaid === 'undefined') {
+          console.warn('Mermaid not loaded yet');
+          return;
+        }
+        
+        // Reset mermaid to ensure clean initialization
+        try {
+          if (mermaid.mermaidAPI) {
+            mermaid.mermaidAPI.reset();
+          }
+        } catch (resetError) {
+          console.warn('Error resetting mermaid:', resetError);
+        }
+        
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'neutral',
+          securityLevel: 'loose',
+          fontFamily: 'Inter, sans-serif',
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis'
+          },
+          logLevel: 1 // Reduce log level to minimize console noise
+        });
+        
+        console.log('Mermaid initialized successfully');
+      } catch (err) {
+        console.error('Mermaid initialization error:', err);
+        setRenderError('Failed to initialize diagram renderer');
       }
-      
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: 'neutral',
-        securityLevel: 'loose',
-        fontFamily: 'Inter, sans-serif',
-        flowchart: {
-          useMaxWidth: true,
-          htmlLabels: true,
-          curve: 'basis'
-        },
-        logLevel: 3
-      });
-      
-      console.log('Mermaid initialized successfully');
-    } catch (err) {
-      console.error('Mermaid initialization error:', err);
-    }
+    };
+    
+    // Add a small delay to ensure mermaid is loaded
+    const timer = setTimeout(initMermaid, 100);
+    return () => clearTimeout(timer);
   }, []);
   
   // Render mermaid diagram with error handling
-  const renderMermaidDiagram = useCallback(() => {
+  const renderMermaidDiagram = useCallback(async () => {
     if (typeof window === 'undefined') return;
     
     try {
@@ -108,6 +124,13 @@ function FlowchartGenerator({
       // Clear previous content
       element.innerHTML = '';
       
+      // Check if mermaid is available
+      if (typeof mermaid === 'undefined') {
+        setRenderError('Diagram renderer not available');
+        element.innerHTML = `<div class="p-4 text-red-500">Diagram renderer not available</div>`;
+        return;
+      }
+      
       // Make sure the mermaid code starts with a valid diagram type
       let codeToRender = mermaidCode.trim();
       if (!codeToRender.startsWith('graph ') && !codeToRender.startsWith('flowchart ')) {
@@ -119,43 +142,43 @@ function FlowchartGenerator({
       // Render with try-catch for better error handling
       try {
         // Validate the diagram before rendering
-        mermaid.parse(codeToRender);
+        const isValid = await mermaid.parse(codeToRender);
+        if (!isValid) {
+          throw new Error('Invalid mermaid syntax');
+        }
         
         // Render the diagram
-        mermaid.render(`svg-${uniqueId}`, codeToRender)
-          .then(result => {
-            if (element) {
-              element.innerHTML = result.svg;
-              
-              // Adjust SVG to fit container
-              const svg = element.querySelector('svg');
-              if (svg) {
-                svg.setAttribute('width', '100%');
-                svg.setAttribute('height', '100%');
-                svg.style.maxWidth = '100%';
-                svg.style.maxHeight = `${Math.min(300, height)}px`;
-              }
-            }
-          })
-          .catch(error => {
-            console.error('Failed to render mermaid diagram:', error);
-            setRenderError('Error rendering flowchart. Please check your syntax.');
-            
-            if (element) {
-              element.innerHTML = `<div class="p-4 text-red-500">Error rendering flowchart</div>`;
-            }
-          });
+        const result = await mermaid.render(`svg-${uniqueId}`, codeToRender);
+        
+        if (element && result && result.svg) {
+          element.innerHTML = result.svg;
+          
+          // Adjust SVG to fit container
+          const svg = element.querySelector('svg');
+          if (svg) {
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.style.maxWidth = '100%';
+            svg.style.maxHeight = `${Math.min(300, height)}px`;
+            svg.style.display = 'block';
+          }
+        }
       } catch (parseError) {
-        console.error('Error parsing mermaid code:', parseError);
+        console.error('Error parsing/rendering mermaid code:', parseError);
         setRenderError('Invalid flowchart syntax. Please check your code.');
         
         if (element) {
-          element.innerHTML = `<div class="p-4 text-red-500">Invalid flowchart syntax</div>`;
+          element.innerHTML = `<div class="p-4 text-red-500 text-sm">Invalid flowchart syntax: ${(parseError as Error)?.message || 'Unknown error'}</div>`;
         }
       }
     } catch (error) {
       console.error('Error rendering mermaid diagram:', error);
-      setRenderError('Error rendering flowchart. Please check your syntax.');
+      setRenderError('Error rendering flowchart. Please try again.');
+      
+      const element = document.getElementById(uniqueId);
+      if (element) {
+        element.innerHTML = `<div class="p-4 text-red-500 text-sm">Error rendering flowchart: ${(error as Error)?.message || 'Unknown error'}</div>`;
+      }
     }
   }, [mermaidCode, uniqueId, height]);
   
@@ -164,8 +187,11 @@ function FlowchartGenerator({
     if (typeof window === 'undefined') return;
     
     const timer = setTimeout(() => {
-      renderMermaidDiagram();
-    }, 300); // Increased timeout for better performance
+      renderMermaidDiagram().catch(error => {
+        console.error('Failed to render diagram:', error);
+        setRenderError('Failed to render diagram');
+      });
+    }, 500); // Increased timeout for better stability
     
     return () => clearTimeout(timer);
   }, [mermaidCode, renderMermaidDiagram]);
@@ -195,7 +221,7 @@ function FlowchartGenerator({
     setRenderError(null);
   }, [initialCode]);
   
-  // Use reaflow if available, otherwise fall back to mermaid
+  // Use reaflow if available and valid, otherwise fall back to mermaid
   const hasValidFlowchart = mermaidCode && mermaidCode.includes('-->');
   
   return (
@@ -238,10 +264,18 @@ function FlowchartGenerator({
         )}
         
         <div className="relative min-h-[300px] w-full rounded-md overflow-hidden border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-          {hasValidFlowchart ? (
-            <ReaflowChart mermaidCode={mermaidCode} height={300} />
+          {hasValidFlowchart && !renderError ? (
+            <div className="flowchart-container">
+              <ReaflowChart mermaidCode={mermaidCode} height={300} />
+            </div>
           ) : (
-            <div id={uniqueId} className="w-full min-h-[300px] flex items-center justify-center"></div>
+            <div id={uniqueId} className="w-full min-h-[300px] flex items-center justify-center">
+              {!mermaidCode.trim() && (
+                <div className="text-gray-400 dark:text-gray-500 text-sm">
+                  Enter flowchart code to see the diagram
+                </div>
+              )}
+            </div>
           )}
         </div>
         

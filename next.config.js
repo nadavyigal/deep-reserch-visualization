@@ -29,11 +29,12 @@ const nextConfig = {
   // Add experimental features to handle non-ASCII paths
   experimental: {
     // Enable better handling of non-ASCII paths
-    outputFileTracingExcludes: {
-      '*': [
-        'node_modules/**',
-      ],
-    },
+  },
+  // Output file tracing excludes (moved from experimental)
+  outputFileTracingExcludes: {
+    '*': [
+      'node_modules/**',
+    ],
   },
 };
 

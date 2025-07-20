@@ -1,5 +1,6 @@
 'use client'
 
+import { useTheme } from 'next-themes'
 import { useState, useEffect, memo } from 'react'
 
 // Create a client-only Button component
@@ -23,39 +24,23 @@ const Button = memo(({
 Button.displayName = 'Button';
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   
   useEffect(() => {
-    // Get theme preference from local storage or system preference
-    const storedTheme = localStorage.getItem('theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    
-    const initialTheme = storedTheme || (prefersDark ? 'dark' : 'light')
-    setTheme(initialTheme as 'light' | 'dark')
-    
-    // Apply theme to document
-    if (initialTheme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
+    setMounted(true)
   }, [])
   
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light'
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
+  // Don't render anything until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="p-2 w-9 h-9 rounded-md"></div>
+    )
   }
-  
+
   return (
     <Button
-      onClick={toggleTheme}
+      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
       className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
     >
       {theme === 'light' ? <MoonIcon /> : <SunIcon />}

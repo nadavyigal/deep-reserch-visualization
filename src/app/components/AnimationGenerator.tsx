@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react';
 import EnhancedTextAnimation from './EnhancedTextAnimation';
 import { advancedTextAnimation } from './AnimationTemplates';

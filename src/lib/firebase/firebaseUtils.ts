@@ -33,6 +33,9 @@ export const createDocument = async <T extends DocumentData>(
   data: T
 ): Promise<void> => {
   try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
     const docRef = doc(db, collectionName, docId) as DocumentReference<T>;
     await setDoc(docRef, data);
   } catch (error) {
@@ -46,6 +49,9 @@ export const getDocument = async <T extends DocumentData>(
   docId: string
 ): Promise<T | null> => {
   try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
     const docRef = doc(db, collectionName, docId) as DocumentReference<T>;
     const docSnap = await getDoc(docRef);
     
@@ -66,6 +72,9 @@ export const updateDocument = async <T extends DocumentData>(
   data: Partial<T>
 ): Promise<void> => {
   try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
     const docRef = doc(db, collectionName, docId) as DocumentReference<T>;
     await updateDoc(docRef, data as DocumentData);
   } catch (error) {
@@ -79,6 +88,9 @@ export const deleteDocument = async (
   docId: string
 ): Promise<void> => {
   try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
     const docRef = doc(db, collectionName, docId);
     await deleteDoc(docRef);
   } catch (error) {
@@ -92,6 +104,9 @@ export const queryDocuments = async <T extends DocumentData>(
   constraints: QueryConstraint[] = []
 ): Promise<T[]> => {
   try {
+    if (!db) {
+      throw new Error('Database is not initialized');
+    }
     const collectionRef = collection(db, collectionName) as CollectionReference<T>;
     const q = query(collectionRef, ...constraints);
     const querySnapshot = await getDocs(q);
@@ -114,6 +129,9 @@ export const uploadFile = async (
   file: File
 ): Promise<string> => {
   try {
+    if (!storage) {
+      throw new Error('Storage is not initialized');
+    }
     const storageRef = ref(storage, path);
     await uploadBytes(storageRef, file);
     const downloadURL = await getDownloadURL(storageRef);
@@ -126,6 +144,9 @@ export const uploadFile = async (
 
 export const getFileURL = async (path: string): Promise<string> => {
   try {
+    if (!storage) {
+      throw new Error('Storage is not initialized');
+    }
     const storageRef = ref(storage, path);
     return await getDownloadURL(storageRef);
   } catch (error) {
@@ -136,6 +157,9 @@ export const getFileURL = async (path: string): Promise<string> => {
 
 export const deleteFile = async (path: string): Promise<void> => {
   try {
+    if (!storage) {
+      throw new Error('Storage is not initialized');
+    }
     const storageRef = ref(storage, path);
     await deleteObject(storageRef);
   } catch (error) {

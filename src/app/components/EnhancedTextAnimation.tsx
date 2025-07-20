@@ -82,6 +82,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
         }
         
         const container = containerRef.current;
+        if (!container) return;
         container.innerHTML = '';
         
         // Extract keywords from text

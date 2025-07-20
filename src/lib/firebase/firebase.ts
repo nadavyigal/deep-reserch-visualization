@@ -40,10 +40,10 @@ const isFirebaseConfigValid = () => {
 
 // Initialize Firebase
 let app;
-// Initialize with empty objects that will be replaced if on client side
-let auth: Auth = {} as Auth;
-let db: Firestore = {} as Firestore;
-let storage: FirebaseStorage = {} as FirebaseStorage;
+// Initialize with null values that will be replaced if on client side  
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
 
 // Check if we're running on the client side
 if (typeof window !== 'undefined') {

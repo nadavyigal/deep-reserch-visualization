@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../lib/hooks/useAuth';
 
 export default function AuthTest() {
-  const { user, loading, signInWithEmail, signOut } = useAuth();
+  const { user, loading, signInWithGoogle, signOut } = useAuth();
   const [authStatus, setAuthStatus] = useState<string>('Checking authentication...');
 
   useEffect(() => {
     if (loading) {
       setAuthStatus('Loading authentication status...');
     } else if (user) {
-      setAuthStatus(`Authenticated as ${user.name || user.email}`);
+      setAuthStatus(`Authenticated as ${user.displayName || user.email}`);
     } else {
       setAuthStatus('Not authenticated');
     }
@@ -19,7 +19,7 @@ export default function AuthTest() {
 
   const handleSignIn = async () => {
     try {
-      await signInWithEmail('user@example.com', 'password');
+      await signInWithGoogle();
     } catch (error) {
       console.error('Authentication error:', error);
     }

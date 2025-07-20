@@ -12,7 +12,7 @@ export default function AuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { 
-    signInWithEmail,
+    signInWithGoogle,
     loading, 
     error: authError 
   } = useAuth();
@@ -31,11 +31,11 @@ export default function AuthForm() {
     
     try {
       if (mode === 'signin') {
-        await signInWithEmail(email, password, rememberMe);
+        await signInWithGoogle();
         console.log('Sign in successful');
       } else {
         // For demo purposes, just inform the user to use the test account
-        setFormError('Sign up is disabled in this demo. Please use test account: user@example.com / password');
+        setFormError('Sign up is disabled in this demo. Please use Google sign-in instead');
       }
     } catch (err: any) {
       console.error('Authentication error:', err);
