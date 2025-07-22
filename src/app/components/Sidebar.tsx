@@ -86,11 +86,29 @@ export default function Sidebar() {
               href="/documents" 
               collapsed={collapsed} 
             />
-            <NavItem 
-              icon={<StarIcon />} 
-              label="Examples" 
-              href="/examples" 
-              collapsed={collapsed} 
+            <NavItem
+              icon={<StarIcon />}
+              label="Examples"
+              href="/examples"
+              collapsed={collapsed}
+            />
+            <NavItem
+              icon={<DocumentIcon />}
+              label="Image Generator"
+              href="/image"
+              collapsed={collapsed}
+            />
+            <NavItem
+              icon={<MicrophoneIcon />}
+              label="Voice Notes"
+              href="/voice-notes"
+              collapsed={collapsed}
+            />
+            <NavItem
+              icon={<TrendingUpIcon />}
+              label="Enhanced Demo"
+              href="/enhanced"
+              collapsed={collapsed}
             />
           </ul>
         </nav>
@@ -172,6 +190,22 @@ function DocumentIcon() {
       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
     </svg>
   );
+}
+
+function MicrophoneIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 1.5v9m6-4.5v4.5a6 6 0 11-12 0V6M5.25 10.5v.75a6.75 6.75 0 0013.5 0v-.75M12 15v5.25" />
+    </svg>
+  )
+}
+
+function TrendingUpIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8" />
+    </svg>
+  )
 }
 
 function StarIcon() {
