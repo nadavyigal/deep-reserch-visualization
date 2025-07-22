@@ -20,6 +20,7 @@ import {
   PieChart
 } from 'recharts';
 import Button from './Button';
+import logger from '@/lib/utils/logger';
 
 // Lazy load heavier components
 const FlowchartGenerator = lazy(() => import('./FlowchartGenerator'));
@@ -326,7 +327,7 @@ const ChartGenerator: React.FC<ChartGeneratorProps> = ({ text, section }) => {
       // Only set error if not aborted
       if (!(err instanceof DOMException && err.name === 'AbortError')) {
         setError('Error generating chart. Please try again.');
-        console.error('Chart generation error:', err);
+        logger.error('Chart generation error:', err);
       }
     } finally {
       setLoading(false);

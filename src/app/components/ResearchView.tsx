@@ -16,6 +16,9 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import LoginButton from './LoginButton';
 import Link from 'next/link';
 import Button from './Button';
+import logger from '@/lib/utils/logger';
+import { parseSections, Section } from '@/lib/utils/parseSections';
+import { exportResearchToPdf } from '@/lib/utils/exportPdf';
 
 interface VisualizationItem {
   id: string;
@@ -41,93 +44,15 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
 
   // Parse research content to extract sections (headers and their content)
   useEffect(() => {
-    if (!researchContent) {
-      setSections([]);
-      return;
-    }
-    
-    const lines = researchContent.split('\n');
-    const extractedSections: { title: string; content: string; level: number }[] = [];
-    let currentSection: { title: string; content: string; level: number } | null = null;
-    
-    // If there's any content, always create at least one section
-    if (researchContent.trim()) {
-      lines.forEach((line, index) => {
-        // Check for markdown headers (# Header)
-        const markdownHeaderMatch = line.match(/^(#{1,3})\s+(.+)$/);
-        
-        // Check for numbered list items that might be headers (1. Header)
-        const numberedHeaderMatch = line.match(/^(\d+)\.\s+(.+)$/);
-        
-        if (markdownHeaderMatch) {
-          // If we find a header and already have a current section, push it to the array
-          if (currentSection) {
-            extractedSections.push(currentSection);
-          }
-          
-          // Start a new section with markdown header
-          const headerLevel = markdownHeaderMatch[1].length;
-          const headerTitle = markdownHeaderMatch[2].trim();
-          
-          currentSection = {
-            title: headerTitle,
-            content: line + '\n', // Include the header in the content
-            level: headerLevel,
-          };
-        } else if (numberedHeaderMatch && (index === 0 || lines[index-1].trim() === '')) {
-          // If we find a numbered item that looks like a header (at start of text or after blank line)
-          // and already have a current section, push it to the array
-          if (currentSection) {
-            extractedSections.push(currentSection);
-          }
-          
-          // Start a new section with numbered header (convert to markdown header)
-          const headerTitle = numberedHeaderMatch[2].trim();
-          const formattedHeader = `## ${headerTitle}`;
-          
-          currentSection = {
-            title: headerTitle,
-            content: formattedHeader + '\n', // Convert numbered list to markdown header
-            level: 2, // Treat numbered headers as h2
-          };
-        } else if (currentSection) {
-          // Add the line to the current section's content
-          currentSection.content += line + '\n';
-        } else if (line.trim() !== '') {
-          // If there's no current section but we have content, create a "Main Content" section
-          currentSection = {
-            title: 'Main Content',
-            content: line + '\n',
-            level: 1,
-          };
-        }
-      });
-      
-      // Add the last section if it exists
-      if (currentSection) {
-        extractedSections.push(currentSection);
-      }
-      
-      // If no sections were found but we have content, create a single section
-      if (extractedSections.length === 0) {
-        extractedSections.push({
-          title: 'Research Content',
-          content: researchContent,
-          level: 1,
-        });
-      }
-    }
-    
-    console.log('Parsed sections:', extractedSections); // Debug log
-    setSections(extractedSections);
-    
-    // Clean up visualizations for sections that no longer exist
-    setVisualizations(prev => prev.filter(viz => viz.sectionIndex < extractedSections.length));
+    const parsed = parseSections(researchContent);
+    logger.info('Parsed sections:', parsed);
+    setSections(parsed);
+    setVisualizations(prev => prev.filter(viz => viz.sectionIndex < parsed.length));
   }, [researchContent]);
 
   // Add visualization to a section
   const addVisualization = (sectionIndex: number, type: 'chart' | 'flowchart' | 'animation') => {
-    console.log(`Adding ${type} visualization to section ${sectionIndex}`);
+    logger.info(`Adding ${type} visualization to section ${sectionIndex}`);
     
     try {
       const newViz: VisualizationItem = {
@@ -136,24 +61,24 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
         sectionIndex,
       };
       
-      console.log('New visualization:', newViz);
+      logger.info('New visualization:', newViz);
       setVisualizations(prev => {
         const updated = [...prev, newViz];
-        console.log('Updated visualizations:', updated);
+        logger.info('Updated visualizations:', updated);
         return updated;
       });
       setShowVisualizationPanel({ sectionIndex: null });
     } catch (error) {
-      console.error('Error adding visualization:', error);
+      logger.error('Error adding visualization:', error);
     }
   };
 
   // Remove visualization
   const removeVisualization = (vizId: string) => {
-    console.log('Removing visualization with ID:', vizId);
+    logger.info('Removing visualization with ID:', vizId);
     setVisualizations(prev => {
       const updated = prev.filter(viz => viz.id !== vizId);
-      console.log('Visualizations after removal:', updated);
+      logger.info('Visualizations after removal:', updated);
       return updated;
     });
   };
@@ -166,106 +91,19 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
   // Function to export the document as PDF
   const exportToPdf = async () => {
     if (!contentRef.current || !user) return;
-    
+
     setIsExporting(true);
-    
     try {
-      // Dynamically import html2pdf to avoid SSR issues
-      const html2pdf = (await import('html2pdf.js')).default;
-      
-      // Temporarily add a class to the content container for PDF styling
-      contentRef.current.classList.add('pdf-export');
-      
-      // Make sure all charts and flowcharts are visible
-      const chartContainers = contentRef.current.querySelectorAll('.flowchart-container, .chart-container');
-      chartContainers.forEach(container => {
-        if (container instanceof HTMLElement) {
-          container.style.height = 'auto';
-          container.style.minHeight = '400px';
-          container.style.overflow = 'visible';
-        }
+      await exportResearchToPdf({
+        element: contentRef.current,
+        user,
+        sections: sections as Section[],
+        researchContent
       });
-      
-      // Get document title from first section or use default
-      const documentTitle = sections.length > 0 && sections[0].title 
-        ? sections[0].title 
-        : 'Research Document';
-      
-      // Create a filename with timestamp to ensure uniqueness
-      const timestamp = new Date().getTime();
-      const filename = `${documentTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${timestamp}.pdf`;
-      
-      // Set options for PDF generation
-      const opt = {
-        margin: 10,
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true,
-          logging: true,
-          letterRendering: true,
-          allowTaint: true
-        },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait' as 'portrait',
-          compress: true
-        }
-      };
-      
-      // Generate PDF as blob
-      const pdfBlob = await html2pdf().set(opt).from(contentRef.current).output('blob');
-      
-      // Save to Firebase Storage
-      const { ref: storageRef, uploadBytes, getDownloadURL } = await import('firebase/storage');
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      const { storage, db } = await import('@/lib/firebase/firebase');
-      
-      // Create a reference to the file location in Firebase Storage
-      if (!storage) {
-        throw new Error('Storage is not initialized');
-      }
-      const fileRef = storageRef(storage, `documents/${user.uid}/${filename}`);
-      
-      // Upload the blob
-      await uploadBytes(fileRef, pdfBlob);
-      
-      // Get the download URL
-      const downloadURL = await getDownloadURL(fileRef);
-      
-      // Save metadata to Firestore
-      if (!db) {
-        throw new Error('Database is not initialized');
-      }
-      await addDoc(collection(db, 'documents'), {
-        title: documentTitle,
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-        fileUrl: downloadURL,
-        fileName: filename,
-        contentPreview: researchContent.substring(0, 200) + (researchContent.length > 200 ? '...' : '')
-      });
-      
-      console.log('PDF exported and saved successfully');
-      
-      // Show success message
+      logger.info('PDF exported and saved successfully');
       alert('Document saved successfully! You can view it in the Documents page.');
-      
-      // Remove the temporary class
-      contentRef.current.classList.remove('pdf-export');
-      
-      // Reset chart container styles
-      chartContainers.forEach(container => {
-        if (container instanceof HTMLElement) {
-          container.style.height = '';
-          container.style.minHeight = '';
-          container.style.overflow = '';
-        }
-      });
     } catch (error) {
-      console.error('Error exporting PDF:', error);
+      logger.error('Error exporting PDF:', error);
       alert('Failed to save document. Please try again later.');
     } finally {
       setIsExporting(false);
@@ -274,7 +112,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
 
   // Render visualization component based on type
   const renderVisualization = (viz: VisualizationItem, section: any) => {
-    console.log('Rendering visualization:', viz.type, 'for section:', section.title);
+    logger.info('Rendering visualization:', viz.type, 'for section:', section.title);
     
     const sectionContent = section.content;
     const sectionTitle = section.title;
@@ -286,7 +124,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
             <div key={viz.id} className="relative bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 mb-4 border border-blue-200 dark:border-blue-700">
               <button
                 onClick={() => {
-                  console.log('Removing visualization:', viz.id);
+                  logger.info('Removing visualization:', viz.id);
                   removeVisualization(viz.id);
                 }}
                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
@@ -305,7 +143,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
             <div key={viz.id} className="relative bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4 mb-4 border border-green-200 dark:border-green-700">
               <button
                 onClick={() => {
-                  console.log('Removing visualization:', viz.id);
+                  logger.info('Removing visualization:', viz.id);
                   removeVisualization(viz.id);
                 }}
                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
@@ -327,7 +165,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
             <div key={viz.id} className="relative bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4 mb-4 border border-purple-200 dark:border-purple-700">
               <button
                 onClick={() => {
-                  console.log('Removing visualization:', viz.id);
+                  logger.info('Removing visualization:', viz.id);
                   removeVisualization(viz.id);
                 }}
                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
@@ -342,11 +180,11 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
           );
         
         default:
-          console.warn('Unknown visualization type:', viz.type);
+          logger.warn('Unknown visualization type:', viz.type);
           return null;
       }
     } catch (error) {
-      console.error('Error rendering visualization:', error);
+      logger.error('Error rendering visualization:', error);
       return (
         <div key={viz.id} className="relative bg-red-50 dark:bg-red-900/20 rounded-lg p-4 mb-4 border border-red-200 dark:border-red-700">
           <button
@@ -372,7 +210,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
         </div>
         <button
           onClick={() => {
-            console.log('Closing visualization panel');
+            logger.info('Closing visualization panel');
             setShowVisualizationPanel({ sectionIndex: null });
           }}
           className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
@@ -383,7 +221,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
       <div className="grid grid-cols-3 gap-4">
         <button
           onClick={() => {
-            console.log(`Adding chart to section ${sectionIndex}`);
+            logger.info(`Adding chart to section ${sectionIndex}`);
             addVisualization(sectionIndex, 'chart');
           }}
           className="flex flex-col items-center p-4 bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all"
@@ -394,7 +232,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
         </button>
         <button
           onClick={() => {
-            console.log(`Adding flowchart to section ${sectionIndex}`);
+            logger.info(`Adding flowchart to section ${sectionIndex}`);
             addVisualization(sectionIndex, 'flowchart');
           }}
           className="flex flex-col items-center p-4 bg-white dark:bg-gray-800 border-2 border-green-200 dark:border-green-700 rounded-xl hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all"
@@ -405,7 +243,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
         </button>
         <button
           onClick={() => {
-            console.log(`Adding animation to section ${sectionIndex}`);
+            logger.info(`Adding animation to section ${sectionIndex}`);
             addVisualization(sectionIndex, 'animation');
           }}
           className="flex flex-col items-center p-4 bg-white dark:bg-gray-800 border-2 border-purple-200 dark:border-purple-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md transition-all"
@@ -525,7 +363,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
                 </div>
               ) : (
                 sections.map((section, index) => {
-                  console.log(`Rendering section ${index}:`, section.title); // Debug log
+                  logger.info(`Rendering section ${index}:`, section.title);
                   return (
                   <div key={`section-${index}`} className="mb-8 border-l-4 border-blue-200 pl-4">
                     {/* Section Header */}
@@ -570,7 +408,7 @@ const ResearchView: React.FC<ResearchViewProps> = ({ initialContent = '' }) => {
                           {showVisualizationPanel.sectionIndex !== index ? (
                             <button
                               onClick={() => {
-                                console.log(`Adding visualization to section ${index}`);
+                                logger.info(`Adding visualization to section ${index}`);
                                 setShowVisualizationPanel({ sectionIndex: index });
                               }}
                               className="w-full flex items-center justify-center gap-3 px-6 py-4 text-sm bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800/50 dark:hover:to-purple-800/50 border-2 border-blue-200 dark:border-blue-700 rounded-xl transition-all shadow-sm hover:shadow-md font-medium"
