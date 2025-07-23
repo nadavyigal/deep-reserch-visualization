@@ -1,21 +1,57 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react';
+import nlp from 'compromise';
+
+export interface TextAnimationTheme {
+  colors?: string[];
+  fontSize?: number;
+  durations?: {
+    centralNode?: number;
+    lines?: number;
+    keywords?: number;
+  };
+}
 
 interface EnhancedTextAnimationProps {
   text: string;
   section?: string;
   className?: string;
+  maxKeywords?: number;
+  theme?: TextAnimationTheme;
+  layout?: 'circle' | 'grid' | 'spiral';
 }
 
 const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
   text,
   section,
   className = '',
+  maxKeywords = 8,
+  theme,
+  layout = 'circle',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
   const animationRef = useRef<any>(null);
+
+  const defaultTheme: Required<TextAnimationTheme> = {
+    colors: [
+      '#3b82f6',
+      '#10b981',
+      '#f59e0b',
+      '#ef4444',
+      '#8b5cf6',
+      '#ec4899',
+    ],
+    fontSize: 16,
+    durations: {
+      centralNode: 800,
+      lines: 600,
+      keywords: 800,
+    },
+  };
+
+  const mergedTheme = { ...defaultTheme, ...theme };
 
   // Set of common stop words to filter out
   const stopWords = new Set([
@@ -31,29 +67,20 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
   ]);
 
   // Extract keywords from text
-  const extractKeywords = (text: string, maxKeywords = 8): string[] => {
-    if (!text) return [];
-    
-    // Tokenize and clean text
-    const words = text.toLowerCase()
-      .replace(/[^\w\s]/g, '') // Remove punctuation
-      .split(/\s+/) // Split by whitespace
-      .filter(word => 
-        word.length > 3 && // Filter out short words
-        !stopWords.has(word) // Filter out stop words
-      );
-    
-    // Count word frequency
-    const wordFrequency: Record<string, number> = {};
-    words.forEach(word => {
-      wordFrequency[word] = (wordFrequency[word] || 0) + 1;
-    });
-    
-    // Sort by frequency and get top keywords
-    return Object.entries(wordFrequency)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, maxKeywords)
-      .map(([word]) => word);
+  const extractKeywords = (content: string, max = 8): string[] => {
+    if (!content) return [];
+
+    try {
+      const doc: any = nlp(content);
+      const freqs = doc.nouns().out('freq');
+      return freqs
+        .filter((f: any) => !stopWords.has(f.normal.toLowerCase()))
+        .slice(0, max)
+        .map((f: any) => f.normal);
+    } catch (err) {
+      console.error('Keyword extraction error', err);
+      return [];
+    }
   };
 
   useEffect(() => {
@@ -86,7 +113,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
         container.innerHTML = '';
         
         // Extract keywords from text
-        const keywords = extractKeywords(text);
+        const keywords = extractKeywords(text, maxKeywords);
         if (keywords.length === 0) return;
         
         // Create container for animation
@@ -97,14 +124,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
         
         // Create elements for each keyword
         const elements: HTMLElement[] = [];
-        const colors = [
-          '#3b82f6', // blue-500
-          '#10b981', // emerald-500
-          '#f59e0b', // amber-500
-          '#ef4444', // red-500
-          '#8b5cf6', // violet-500
-          '#ec4899', // pink-500
-        ];
+        const colors = mergedTheme.colors;
         
         keywords.forEach((keyword, index) => {
           const el = document.createElement('div');
@@ -115,7 +135,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
           el.style.backgroundColor = colors[index % colors.length];
           el.style.color = 'white';
           el.style.fontWeight = 'bold';
-          el.style.fontSize = '16px';
+          el.style.fontSize = `${mergedTheme.fontSize}px`;
           el.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
           el.style.transform = 'scale(0)';
           el.style.opacity = '0';
@@ -124,19 +144,47 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
           elements.push(el);
         });
         
-        // Position elements in a circular pattern
+        // Position elements based on layout
         const centerX = container.offsetWidth / 2;
         const centerY = container.offsetHeight / 2;
         const radius = Math.min(centerX, centerY) * 0.7;
-        
-        elements.forEach((el, i) => {
-          const angle = (i / elements.length) * Math.PI * 2;
-          const x = centerX + radius * Math.cos(angle) - el.offsetWidth / 2;
-          const y = centerY + radius * Math.sin(angle) - el.offsetHeight / 2;
-          
-          el.style.left = `${x}px`;
-          el.style.top = `${y}px`;
-        });
+
+        const positionElements = () => {
+          if (layout === 'grid') {
+            const cols = Math.ceil(Math.sqrt(elements.length));
+            const rows = Math.ceil(elements.length / cols);
+            const spacingX = container.offsetWidth / (cols + 1);
+            const spacingY = container.offsetHeight / (rows + 1);
+            elements.forEach((el, i) => {
+              const row = Math.floor(i / cols);
+              const col = i % cols;
+              const x = spacingX * (col + 1) - el.offsetWidth / 2;
+              const y = spacingY * (row + 1) - el.offsetHeight / 2;
+              el.style.left = `${x}px`;
+              el.style.top = `${y}px`;
+            });
+          } else if (layout === 'spiral') {
+            const spacing = 20;
+            elements.forEach((el, i) => {
+              const angle = i * 0.5;
+              const r = spacing * angle;
+              const x = centerX + r * Math.cos(angle) - el.offsetWidth / 2;
+              const y = centerY + r * Math.sin(angle) - el.offsetHeight / 2;
+              el.style.left = `${x}px`;
+              el.style.top = `${y}px`;
+            });
+          } else {
+            elements.forEach((el, i) => {
+              const angle = (i / elements.length) * Math.PI * 2;
+              const x = centerX + radius * Math.cos(angle) - el.offsetWidth / 2;
+              const y = centerY + radius * Math.sin(angle) - el.offsetHeight / 2;
+              el.style.left = `${x}px`;
+              el.style.top = `${y}px`;
+            });
+          }
+        };
+
+        positionElements();
         
         // Create central node with section title
         const centralNode = document.createElement('div');
@@ -147,10 +195,10 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
         centralNode.style.transform = 'translate(-50%, -50%) scale(0)';
         centralNode.style.padding = '12px 20px';
         centralNode.style.borderRadius = '20px';
-        centralNode.style.backgroundColor = '#1e293b'; // slate-800
+        centralNode.style.backgroundColor = mergedTheme.colors[0];
         centralNode.style.color = 'white';
         centralNode.style.fontWeight = 'bold';
-        centralNode.style.fontSize = '18px';
+        centralNode.style.fontSize = `${mergedTheme.fontSize + 2}px`;
         centralNode.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
         centralNode.style.zIndex = '10';
         centralNode.style.opacity = '0';
@@ -189,7 +237,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
         // Animate elements
         const timeline = anime.timeline({
           easing: 'easeOutElastic(1, .5)',
-          duration: 800,
+          duration: mergedTheme.durations.centralNode,
         });
         
         // Animate central node
@@ -197,7 +245,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
           targets: centralNode,
           scale: [0, 1],
           opacity: [0, 1],
-          duration: 800,
+          duration: mergedTheme.durations.centralNode,
         });
         
         // Animate lines
@@ -206,7 +254,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
           opacity: [0, 0.7],
           strokeDashoffset: [anime.setDashoffset, 0],
           easing: 'easeOutQuad',
-          duration: 600,
+          duration: mergedTheme.durations.lines,
           delay: anime.stagger(100),
         }, '-=400');
         
@@ -215,7 +263,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
           targets: elements,
           scale: [0, 1],
           opacity: [0, 1],
-          duration: 800,
+          duration: mergedTheme.durations.keywords,
           delay: anime.stagger(150),
         }, '-=600');
         
@@ -249,7 +297,7 @@ const EnhancedTextAnimation: React.FC<EnhancedTextAnimationProps> = ({
     };
     
     createAnimation();
-  }, [text, section, isClient]);
+  }, [text, section, isClient, layout, maxKeywords, theme]);
 
   return (
     <div 
