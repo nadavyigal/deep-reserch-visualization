@@ -631,6 +631,53 @@ function createAnimation(anime, container) {
 }
 `;
 
+export const gridBounceAnimation = `
+function createAnimation(anime, container) {
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'relative';
+  wrapper.style.width = '100%';
+  wrapper.style.height = '100%';
+  wrapper.style.display = 'grid';
+  wrapper.style.gridTemplateColumns = 'repeat(3, 1fr)';
+  wrapper.style.gridGap = '10px';
+  container.appendChild(wrapper);
+
+  const blocks = [];
+  for (let i = 0; i < 9; i++) {
+    const b = document.createElement('div');
+    b.style.background = '#4f46e5';
+    b.style.height = '60px';
+    b.style.borderRadius = '4px';
+    b.style.opacity = '0';
+    wrapper.appendChild(b);
+    blocks.push(b);
+  }
+
+  const tl = anime.timeline({ loop: true });
+  tl.add({
+    targets: blocks,
+    scale: [0, 1],
+    opacity: [0, 1],
+    delay: anime.stagger(100),
+    easing: 'easeOutBack'
+  }).add({
+    targets: blocks,
+    translateY: [-10, 0],
+    duration: 600,
+    easing: 'easeOutElastic(1,.8)',
+    delay: anime.stagger(50)
+  }).add({
+    targets: blocks,
+    opacity: 0,
+    scale: 0,
+    delay: anime.stagger(80),
+    easing: 'easeInBack',
+    duration: 500
+  });
+  return tl;
+}
+`;
+
 // Get a random animation template
 export const getRandomTemplate = (): string => {
   const templates = [
@@ -638,7 +685,8 @@ export const getRandomTemplate = (): string => {
     customTextAnimation,
     dataVisualizationAnimation,
     textRevealAnimation,
-    basicCirclesAnimation
+    basicCirclesAnimation,
+    gridBounceAnimation
   ];
   
   // Return the advanced text animation most of the time
